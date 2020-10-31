@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "ChessGameClient.h"
+#include "WindowPainter.hpp"
 
 #define MAX_LOADSTRING 100
 
@@ -10,6 +11,7 @@
 HINSTANCE hInst;                                // текущий экземпляр
 WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
+//WindowPainter windowPainter;
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -26,6 +28,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: Разместите код здесь.
+    // Start up GDI+.
+    GdiplusStartupInput gdiplusStartupInput;
+    ULONG_PTR gdiplusToken;
+    GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
     // Инициализация глобальных строк
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -51,6 +57,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
+
+    GdiplusShutdown(gdiplusToken);
 
     return (int) msg.wParam;
 }
@@ -111,6 +119,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    return TRUE;
 }
 
+std::wstring GetExePath() {
+    TCHAR buffer[MAX_PATH] = { 0 };
+    GetModuleFileName(NULL, buffer, MAX_PATH);
+    return std::wstring(buffer).substr(0, std::wstring(buffer).find_last_of(L"\\/"));
+}
+
 //
 //  ФУНКЦИЯ: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
@@ -125,6 +139,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_CREATE:
+      //  windowPainter.LoadBitMap(L"\\GameField.jpg");
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -146,11 +162,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
+
             // TODO: Добавьте сюда любой код прорисовки, использующий HDC...
+            Image image(std::wstring(GetExePath() + L"\\GameField.jpg").c_str());
+            Graphics graphics(hdc);
+            graphics.DrawImage(&image, 10, 10);
+
             EndPaint(hWnd, &ps);
         }
         break;
     case WM_DESTROY:
+     //   windowPainter.~WindowPainter();
         PostQuitMessage(0);
         break;
     default:
