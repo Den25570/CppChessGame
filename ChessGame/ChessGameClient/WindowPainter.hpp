@@ -9,6 +9,17 @@ using namespace Gdiplus;
 
 //Class to manage all draw functionality
 
+struct BoardInfo {
+	int width;
+	int height;
+	int topOffset;
+	int leftOffset;
+	int bottomOffset;
+	int rightOffest;
+	int cellWidth;
+	int cellHeight;
+};
+
 class WindowPainter {
 public:
 	void DrawField();
@@ -23,5 +34,7 @@ private:
 	RECT windowRect;
 	HDC currentHDC;
 	Graphics* currentGraphics;
+	BoardInfo boardInfo;
+	float boardSizeMult;
 	Image* fieldImage;
 };

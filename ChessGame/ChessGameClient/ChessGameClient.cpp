@@ -167,6 +167,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             // TODO: Добавьте сюда любой код прорисовки, использующий HDC...
             windowPainter.DrawField();
+            windowPainter.DrawFigures();
 
             EndPaint(hWnd, &ps);
         }
