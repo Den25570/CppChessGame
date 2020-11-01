@@ -9,13 +9,19 @@ using namespace Gdiplus;
 
 //Class to manage all draw functionality
 
-/*class WindowPainter {
+class WindowPainter {
 public:
-	void DrawField(HDC hdc);
+	void DrawField();
 	void DrawFigures();
-	void LoadBitMap(std::wstring path);
+	void LoadImageFromFile(std::wstring path);
+	void SetHDC(HDC hdc);
+	void SetWindow(HWND hwnd);
 
-	WindowPainter() {}
+	void FreeResources();
 
-	Image fieldImage;
-};*/
+private:
+	RECT windowRect;
+	HDC currentHDC;
+	Graphics* currentGraphics;
+	Image* fieldImage;
+};

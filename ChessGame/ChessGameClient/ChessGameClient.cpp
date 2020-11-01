@@ -11,7 +11,7 @@
 HINSTANCE hInst;                                // текущий экземпляр
 WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
-//WindowPainter windowPainter;
+WindowPainter windowPainter;
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -140,7 +140,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_CREATE:
-      //  windowPainter.LoadBitMap(L"\\GameField.jpg");
+        windowPainter.LoadImageFromFile(L"\\GameField.jpg");
+        windowPainter.SetWindow(hWnd);
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -162,17 +163,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
+            windowPainter.SetHDC(hdc);
 
             // TODO: Добавьте сюда любой код прорисовки, использующий HDC...
-            Image image(std::wstring(GetExePath() + L"\\GameField.jpg").c_str());
-            Graphics graphics(hdc);
-            graphics.DrawImage(&image, 10, 10);
+            windowPainter.DrawField();
 
             EndPaint(hWnd, &ps);
         }
         break;
     case WM_DESTROY:
-     //   windowPainter.~WindowPainter();
+        windowPainter.FreeResources();
         PostQuitMessage(0);
         break;
     default:
