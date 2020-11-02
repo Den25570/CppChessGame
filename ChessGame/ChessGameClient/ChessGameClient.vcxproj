@@ -139,8 +139,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Board.hpp" />
     <ClInclude Include="ChessGameClient.h" />
+    <ClInclude Include="Figure.hpp" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="Game.hpp" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WindowPainter.hpp" />

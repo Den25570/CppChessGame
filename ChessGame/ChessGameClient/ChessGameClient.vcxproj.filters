@@ -33,6 +33,15 @@
     <ClInclude Include="targetver.h">
       <Filter>Файлы заголовков\Resources</Filter>
     </ClInclude>
+    <ClInclude Include="Figure.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Board.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ChessGameClient.cpp">

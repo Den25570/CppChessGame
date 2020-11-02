@@ -7,24 +7,18 @@
 using namespace Gdiplus;
 #pragma comment (lib,"Gdiplus.lib")
 
-//Class to manage all draw functionality
+#include "Game.hpp"
 
-struct BoardInfo {
-	int width;
-	int height;
-	int topOffset;
-	int leftOffset;
-	int bottomOffset;
-	int rightOffest;
-	int cellWidth;
-	int cellHeight;
-};
+
+//Class to manage all draw functionality
 
 class WindowPainter {
 public:
 	void DrawField();
 	void DrawFigures();
-	void LoadImageFromFile(std::wstring path);
+
+	void LoadSprites();
+
 	void SetHDC(HDC hdc);
 	void SetWindow(HWND hwnd);
 
@@ -34,7 +28,8 @@ private:
 	RECT windowRect;
 	HDC currentHDC;
 	Graphics* currentGraphics;
-	BoardInfo boardInfo;
-	float boardSizeMult;
-	Image* fieldImage;
+
+	Game game;
+
+	void LoadBoardSprite(std::wstring path);
 };

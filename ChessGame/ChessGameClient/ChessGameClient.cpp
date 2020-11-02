@@ -140,7 +140,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_CREATE:
-        windowPainter.LoadImageFromFile(L"\\GameField.jpg");
+        windowPainter.LoadSprites();
         windowPainter.SetWindow(hWnd);
     case WM_COMMAND:
         {
@@ -171,6 +171,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             EndPaint(hWnd, &ps);
         }
+        break;
+    case WM_SIZE:
+        windowPainter.SetWindow(hWnd);
+        break;
+    case WM_SIZING:
+        windowPainter.SetWindow(hWnd);
         break;
     case WM_DESTROY:
         windowPainter.FreeResources();
