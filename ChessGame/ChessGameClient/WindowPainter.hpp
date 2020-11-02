@@ -6,30 +6,25 @@
 #include <gdiplus.h>
 using namespace Gdiplus;
 #pragma comment (lib,"Gdiplus.lib")
-
-#include "Game.hpp"
-
+#include "Board.hpp"
 
 //Class to manage all draw functionality
 
 class WindowPainter {
 public:
-	void DrawField();
-	void DrawFigures();
+	void DrawField(Board* board);
+	void DrawFigures(Board* board);
 
-	void LoadSprites();
+	void LoadSprites(Board* board);
 
 	void SetHDC(HDC hdc);
 	void SetWindow(HWND hwnd);
-
-	void FreeResources();
 
 private:
 	RECT windowRect;
 	HDC currentHDC;
 	Graphics* currentGraphics;
 
-	Game game;
-
-	void LoadBoardSprite(std::wstring path);
+	void LoadBoardSprite(Board* board, std::wstring path);
+	void LoadFigureSprites(Board* board, std::wstring folderPath);
 };

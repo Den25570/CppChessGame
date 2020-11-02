@@ -1,43 +1,64 @@
 #include "WindowPainter.hpp"
 
-void WindowPainter::LoadSprites() {
-	this->LoadBoardSprite(L"\\GameField.jpg");
+void WindowPainter::LoadSprites(Board* board) {
+	this->LoadBoardSprite(board, L"GameField.jpg");
+	this->LoadFigureSprites(board, L"ChessFigures.png");
 }
 
-void WindowPainter::LoadBoardSprite(std::wstring path) {
+void WindowPainter::LoadFigureSprites(Board* board, std::wstring folderPath) {
+	board->figureSprites = Bitmap::FromFile(folderPath.c_str());
+
+	RectF srcRect;
+	Unit srcUnit;
+	board->figureSprites->GetBounds(&srcRect, &srcUnit);
+
+	int figureWidth = srcRect.Width / 6.0;
+	int figureHeight = srcRect.Height / 2.0;
+	board->figureInfo.width = board->boardImageInfo.cellWidth;
+	board->figureInfo.height = board->boardImageInfo.cellHeight;
+	for (int i = 0; i < 2; i++) {
+		for (int j = 0; j < 6; j++) {
+			Rect rect(j * figureWidth, i * figureHeight, figureWidth, figureHeight);
+			board->figuresBoundingRect[i*6 + j] = rect;
+		}
+	}
+}
+
+void WindowPainter::LoadBoardSprite(Board* board, std::wstring path) {
 	//To DO: разные поля с разными характеристиками
-	this->game.board.sprite = Image::FromFile(path.c_str());
+	board->sprite = Image::FromFile(path.c_str());
 
-	this->game.board.boardImageInfo.width = 800;
-	this->game.board.boardImageInfo.height = 800;
-	this->game.board.boardImageInfo.topOffset = 18;
-	this->game.board.boardImageInfo.leftOffset = 19;
-	this->game.board.boardImageInfo.bottomOffset = 21;
-	this->game.board.boardImageInfo.rightOffest = 20;
-	this->game.board.boardImageInfo.cellWidth = 95;
-	this->game.board.boardImageInfo.cellHeight = 95;
+	board->boardImageInfo.width = 800;
+	board->boardImageInfo.height = 800;
+	board->boardImageInfo.topOffset = 18;
+	board->boardImageInfo.leftOffset = 19;
+	board->boardImageInfo.bottomOffset = 21;
+	board->boardImageInfo.rightOffest = 20;
+	board->boardImageInfo.cellWidth = 95;
+	board->boardImageInfo.cellHeight = 95;
 }
 
-void WindowPainter::DrawField() {
+void WindowPainter::DrawField(Board* board) {
 	INT height = this->windowRect.bottom - this->windowRect.top;
-	INT width = (this->game.board.sprite->GetWidth() / (this->game.board.sprite->GetHeight() * 1.0)) * height;
-	this->game.board.boardInfo.boardSizeMult = (1.0f * height) / (this->game.board.boardImageInfo.height);
+	INT width = (board->sprite->GetWidth() / (board->sprite->GetHeight() * 1.0)) * height;
+	board->boardInfo.boardSizeMult = (1.0f * height) / (board->boardImageInfo.height);
+	board->boardInfo.xPos = 0;
+	board->boardInfo.yPos = 0;
 
-	this->game.board.boardInfo.xPos = 0;
-	this->game.board.boardInfo.yPos = 0;
-
-	this->currentGraphics->DrawImage(this->game.board.sprite, this->game.board.boardInfo.xPos, this->game.board.boardInfo.yPos, width, height);
+	this->currentGraphics->DrawImage(board->sprite, board->boardInfo.xPos, board->boardInfo.yPos, width, height);
 }
 
-void WindowPainter::DrawFigures() {
-	Pen bluePen(Color(255, 0, 0, 255));
+void WindowPainter::DrawFigures(Board* board) {
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
-			float x = (this->game.board.boardImageInfo.topOffset + i * this->game.board.boardImageInfo.cellWidth + this->game.board.boardImageInfo.cellWidth / 2.0f) * this->game.board.boardInfo.boardSizeMult;
-			float y = (this->game.board.boardImageInfo.leftOffset + j * this->game.board.boardImageInfo.cellHeight + this->game.board.boardImageInfo.cellHeight / 2.0f) * this->game.board.boardInfo.boardSizeMult;
+			float x = (board->boardImageInfo.topOffset + i * board->boardImageInfo.cellWidth + board->boardImageInfo.cellWidth / 2.0f - board->figureInfo.width / 2.0f) * board->boardInfo.boardSizeMult;
+			float y = (board->boardImageInfo.leftOffset + j * board->boardImageInfo.cellHeight + board->boardImageInfo.cellHeight / 2.0f - board->figureInfo.height / 2.0f) * board->boardInfo.boardSizeMult;
 
-			RectF ellipseRect(x, y, 40.0f, 40.0f);
-			this->currentGraphics->DrawEllipse(&bluePen, ellipseRect);
+			RectF destRect(x, y, board->figureInfo.width * board->boardInfo.boardSizeMult, board->figureInfo.height * board->boardInfo.boardSizeMult);
+			if (board->figures[i][j] != nullptr) {
+				Rect srcRect = board->figuresBoundingRect[board->figures[i][j]->type + board->figures[i][j]->side * 6];
+				this->currentGraphics->DrawImage(board->figureSprites, destRect, srcRect.X, srcRect.Y, srcRect.Width, srcRect.Height, UnitPixel);
+			}
 		}
 	}
 	
@@ -52,11 +73,4 @@ void WindowPainter::SetHDC(HDC hdc) {
 
 void WindowPainter::SetWindow(HWND hwnd) {
 	GetClientRect(hwnd, &this->windowRect);
-}
-
-void WindowPainter::FreeResources() {
-	if (this->currentGraphics != nullptr)
-		this->currentGraphics->~Graphics();
-	if (this->game.board.sprite != nullptr)
-		this->game.board.sprite->~Image();
 }

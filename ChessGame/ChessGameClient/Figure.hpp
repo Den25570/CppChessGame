@@ -1,24 +1,21 @@
 #pragma once
 
-#include <gdiplus.h>
-
 enum FigureType {
-	Pawn,
-	Bishop,
-	Knight,
-	Rook,
-	Queen,
 	King,
-};
+	Queen,
+	Bishop,
+	Knight, 
+	Rook,
+	Pawn,	
+}; 
 
 class Figure {
 public:
-	int xBoardPos;
-	int yBoardPos;
-
-	int xWindowPos;
-	int yWindowPos;
-
 	FigureType type;
-	Image* sprite;
+	int side; // 0 - white, 1 - black
+
+	Figure(FigureType _type, int _side) {
+		this->type = _type;
+		this->side = _side;
+	}
 };

@@ -4,6 +4,7 @@
 #include "framework.h"
 #include "ChessGameClient.h"
 #include "WindowPainter.hpp"
+#include "Board.hpp"
 
 #define MAX_LOADSTRING 100
 
@@ -11,7 +12,8 @@
 HINSTANCE hInst;                                // текущий экземпляр
 WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
-WindowPainter windowPainter;
+WindowPainter windowPainter;                    // 
+Board board;
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -140,8 +142,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_CREATE:
-        windowPainter.LoadSprites();
-        windowPainter.SetWindow(hWnd);
+        //window init
+        windowPainter.LoadSprites(&board);
+        windowPainter.SetWindow(hWnd);      
+
+        //game init
+        board.SetUpFigures();
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -166,8 +172,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             windowPainter.SetHDC(hdc);
 
             // TODO: Добавьте сюда любой код прорисовки, использующий HDC...
-            windowPainter.DrawField();
-            windowPainter.DrawFigures();
+            windowPainter.DrawField(&board);
+            windowPainter.DrawFigures(&board);
 
             EndPaint(hWnd, &ps);
         }
@@ -179,7 +185,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         windowPainter.SetWindow(hWnd);
         break;
     case WM_DESTROY:
-        windowPainter.FreeResources();
         PostQuitMessage(0);
         break;
     default:
