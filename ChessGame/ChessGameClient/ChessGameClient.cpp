@@ -16,6 +16,7 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса глав�
 WindowPainter windowPainter;                    // 
 Board board;
 bool isDragging = false;
+bool isMemorized = false;
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -173,13 +174,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             //init
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
-            BitBlt(windowPainter.bufferDC, windowPainter.windowRect.left, windowPainter.windowRect.top, windowPainter.windowRect.right - windowPainter.windowRect.left,
-                windowPainter.windowRect.bottom - windowPainter.windowRect.top, hdc, windowPainter.windowRect.left, windowPainter.windowRect.top, SRCCOPY);
+            if (!isMemorized) {
+                BitBlt(windowPainter.bufferDC, windowPainter.windowRect.left, windowPainter.windowRect.top, windowPainter.windowRect.right - windowPainter.windowRect.left,
+                    windowPainter.windowRect.bottom - windowPainter.windowRect.top, hdc, windowPainter.windowRect.left, windowPainter.windowRect.top, SRCCOPY);
+            }
+            else {
+                BitBlt(windowPainter.bufferDC, windowPainter.windowRect.left, windowPainter.windowRect.top, windowPainter.windowRect.right - windowPainter.windowRect.left,
+                    windowPainter.windowRect.bottom - windowPainter.windowRect.top, windowPainter.memoryDC, windowPainter.windowRect.left, windowPainter.windowRect.top, SRCCOPY);
+            }
+            
             windowPainter.SetHDC(windowPainter.bufferDC);
 
             // draw
-            windowPainter.DrawField(&board);
-            windowPainter.DrawFigures(&board);
+            if (!isMemorized) {
+                windowPainter.DrawField(&board);
+                windowPainter.DrawFigures(&board);
+                if (isDragging && !isMemorized) {
+                    BitBlt(windowPainter.memoryDC, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left,
+                        ps.rcPaint.bottom - ps.rcPaint.top, windowPainter.bufferDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
+                    isMemorized = true;
+                }
+            }           
+            windowPainter.DrawSelectedFigure(&board);
 
             //finish
             BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left,
@@ -204,7 +220,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_LBUTTONDOWN: 
         if (!isDragging) {
             if (board.TrySelectFigure(LOWORD(lParam), HIWORD(lParam))) {
+                windowPainter.xMousePos = LOWORD(lParam);
+                windowPainter.yMousePos = HIWORD(lParam);
+
                 isDragging = true;
+                isMemorized = false;
                 InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
             }           
         }
@@ -213,6 +233,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (isDragging) {
             if (board.TrySetFigureInCell(LOWORD(lParam), HIWORD(lParam))) {
                 isDragging = false;
+                isMemorized = false;
                 InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
             }    
         }
@@ -225,24 +246,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return 0;
 }
-
-/*//prepare
-		RECT windowPainter.windowRect = window->canvas;
-		BitBlt(window->bufferDC, windowPainter.windowRect.left, windowPainter.windowRect.top, windowPainter.windowRect.right - windowPainter.windowRect.left,
-			windowPainter.windowRect.bottom - windowPainter.windowRect.top, window->memoryDC, windowPainter.windowRect.left, windowPainter.windowRect.top, SRCCOPY);
-
-		//draw
-
-		if (window->Drawing) {
-			DrawingTool::Draw(window, window->bufferDC, points);
-		}
-		
-		//finish
-		hdc = BeginPaint(hWnd, &paintStruct);
-		BitBlt(hdc, paintStruct.rcPaint.left, paintStruct.rcPaint.top, paintStruct.rcPaint.right - paintStruct.rcPaint.left,
-			paintStruct.rcPaint.bottom - paintStruct.rcPaint.top, window->bufferDC, paintStruct.rcPaint.left, paintStruct.rcPaint.top, SRCCOPY);
-		EndPaint(hWnd, &paintStruct);
-		break; */
 
 // Обработчик сообщений для окна "О программе".
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)

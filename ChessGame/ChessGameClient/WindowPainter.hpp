@@ -17,9 +17,11 @@ public:
 	int yMousePos;
 
 	HDC bufferDC;
+	HDC memoryDC;
 
 	void DrawField(Board* board);
 	void DrawFigures(Board* board);
+	void DrawSelectedFigure(Board* bnoard);
 
 	void LoadSprites(Board* board);
 

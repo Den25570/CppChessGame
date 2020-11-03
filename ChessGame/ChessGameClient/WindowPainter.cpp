@@ -51,16 +51,10 @@ void WindowPainter::DrawField(Board* board) {
 void WindowPainter::DrawFigures(Board* board) {
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
-			if (board->figures[i][j] != nullptr) {
+			if (board->figures[i][j] != nullptr && board->figures[i][j] != board->selectedFigure) {
 				float x, y;
-				if (board->figures[i][j] == board->selectedFigure) {
-					x = xMousePos - (board->figureInfo.width / 2.0f) * board->boardInfo.boardSizeMult;
-					y = yMousePos - (board->figureInfo.height / 2.0f) * board->boardInfo.boardSizeMult;
-				}
-				else {
-					x = (board->boardImageInfo.topOffset + i * board->boardImageInfo.cellWidth + board->boardImageInfo.cellWidth / 2.0f - board->figureInfo.width / 2.0f) * board->boardInfo.boardSizeMult;
-					y = (board->boardImageInfo.leftOffset + j * board->boardImageInfo.cellHeight + board->boardImageInfo.cellHeight / 2.0f - board->figureInfo.height / 2.0f) * board->boardInfo.boardSizeMult;
-				}				
+				x = (board->boardImageInfo.topOffset + i * board->boardImageInfo.cellWidth + board->boardImageInfo.cellWidth / 2.0f - board->figureInfo.width / 2.0f) * board->boardInfo.boardSizeMult;
+				y = (board->boardImageInfo.leftOffset + j * board->boardImageInfo.cellHeight + board->boardImageInfo.cellHeight / 2.0f - board->figureInfo.height / 2.0f) * board->boardInfo.boardSizeMult;
 				RectF destRect(x, y, board->figureInfo.width * board->boardInfo.boardSizeMult, board->figureInfo.height * board->boardInfo.boardSizeMult);
 				Rect srcRect = board->figuresBoundingRect[board->figures[i][j]->type + board->figures[i][j]->side * 6];
 				this->currentGraphics->DrawImage(board->figureSprites, destRect, srcRect.X, srcRect.Y, srcRect.Width, srcRect.Height, UnitPixel);
@@ -69,12 +63,29 @@ void WindowPainter::DrawFigures(Board* board) {
 	}	
 }
 
+void WindowPainter::DrawSelectedFigure(Board* board)
+{
+	if (board->selectedFigure != nullptr) {
+		float x, y;
+		x = xMousePos - (board->figureInfo.width / 2.0f) * board->boardInfo.boardSizeMult;
+		y = yMousePos - (board->figureInfo.height / 2.0f) * board->boardInfo.boardSizeMult;
+		RectF destRect(x, y, board->figureInfo.width * board->boardInfo.boardSizeMult, board->figureInfo.height * board->boardInfo.boardSizeMult);
+		Rect srcRect = board->figuresBoundingRect[board->selectedFigure->type + board->selectedFigure->side * 6];
+		this->currentGraphics->DrawImage(board->figureSprites, destRect, srcRect.X, srcRect.Y, srcRect.Width, srcRect.Height, UnitPixel);
+	}	
+}
+
 void WindowPainter::CreateBuffer(HWND hwnd) {
 	HDC tmpHdc = GetWindowDC(hwnd);
 	this->bufferDC = CreateCompatibleDC(tmpHdc);
+	this->memoryDC = CreateCompatibleDC(tmpHdc);
 
 	HBITMAP hBitmap = CreateCompatibleBitmap(tmpHdc, this->windowRect.right - this->windowRect.left, this->windowRect.bottom - this->windowRect.top);
 	SelectObject(bufferDC, hBitmap);
+	DeleteObject(hBitmap);
+
+	hBitmap = CreateCompatibleBitmap(tmpHdc, this->windowRect.right - this->windowRect.left, this->windowRect.bottom - this->windowRect.top);
+	SelectObject(memoryDC, hBitmap);
 	DeleteObject(hBitmap);
 
 	ReleaseDC(hwnd, tmpHdc);
