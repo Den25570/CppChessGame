@@ -16,16 +16,19 @@ public:
 	int xMousePos;
 	int yMousePos;
 
+	HDC bufferDC;
+
 	void DrawField(Board* board);
 	void DrawFigures(Board* board);
 
 	void LoadSprites(Board* board);
 
+	void CreateBuffer(HWND hwnd);
 	void SetHDC(HDC hdc);
 	void SetWindow(HWND hwnd);
 
 private:
-	HDC currentHDC;
+	HDC currentHDC;	
 	Graphics* currentGraphics;
 
 	void LoadBoardSprite(Board* board, std::wstring path);

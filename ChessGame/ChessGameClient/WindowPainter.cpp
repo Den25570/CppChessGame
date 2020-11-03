@@ -69,6 +69,17 @@ void WindowPainter::DrawFigures(Board* board) {
 	}	
 }
 
+void WindowPainter::CreateBuffer(HWND hwnd) {
+	HDC tmpHdc = GetWindowDC(hwnd);
+	this->bufferDC = CreateCompatibleDC(tmpHdc);
+
+	HBITMAP hBitmap = CreateCompatibleBitmap(tmpHdc, this->windowRect.right - this->windowRect.left, this->windowRect.bottom - this->windowRect.top);
+	SelectObject(bufferDC, hBitmap);
+	DeleteObject(hBitmap);
+
+	ReleaseDC(hwnd, tmpHdc);
+}
+
 void WindowPainter::SetHDC(HDC hdc) {
 	if (this->currentGraphics != nullptr)
 		this->currentGraphics->~Graphics();

@@ -146,7 +146,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
         //window init
         windowPainter.LoadSprites(&board);
-        windowPainter.SetWindow(hWnd);      
+        windowPainter.SetWindow(hWnd);    
+        windowPainter.CreateBuffer(hWnd);
 
         //game init
         board.SetUpFigures();
@@ -168,15 +169,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_PAINT:
-        {
+        {   
+            //init
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
-            windowPainter.SetHDC(hdc);
+            BitBlt(windowPainter.bufferDC, windowPainter.windowRect.left, windowPainter.windowRect.top, windowPainter.windowRect.right - windowPainter.windowRect.left,
+                windowPainter.windowRect.bottom - windowPainter.windowRect.top, hdc, windowPainter.windowRect.left, windowPainter.windowRect.top, SRCCOPY);
+            windowPainter.SetHDC(windowPainter.bufferDC);
 
-            // TODO: Добавьте сюда любой код прорисовки, использующий HDC...
+            // draw
             windowPainter.DrawField(&board);
             windowPainter.DrawFigures(&board);
 
+            //finish
+            BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left,
+                ps.rcPaint.bottom - ps.rcPaint.top, windowPainter.bufferDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
             EndPaint(hWnd, &ps);
         }
         break;
@@ -219,28 +226,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-/*if (e.type == Event::MouseButtonPressed)
-                if (e.key.code == Mouse::Left)
-                  for(int i=0;i<32;i++)
-                  if (f[i].getGlobalBounds().contains(pos.x,pos.y))
-                      {
-                       isMove=true; n=i;
-                       dx=pos.x - f[i].getPosition().x;
-                       dy=pos.y - f[i].getPosition().y;
-                       oldPos  =  f[i].getPosition();
-                      }
+/*//prepare
+		RECT windowPainter.windowRect = window->canvas;
+		BitBlt(window->bufferDC, windowPainter.windowRect.left, windowPainter.windowRect.top, windowPainter.windowRect.right - windowPainter.windowRect.left,
+			windowPainter.windowRect.bottom - windowPainter.windowRect.top, window->memoryDC, windowPainter.windowRect.left, windowPainter.windowRect.top, SRCCOPY);
 
-             if (e.type == Event::MouseButtonReleased)
-                if (e.key.code == Mouse::Left)
-                 {
-                  isMove=false;
-                  Vector2f p = f[n].getPosition() + Vector2f(size/2,size/2);
-                  newPos = Vector2f( size*int(p.x/size), size*int(p.y/size) );
-                  str = toChessNote(oldPos)+toChessNote(newPos);
-                  move(str); 
-                  if (oldPos!=newPos) position+=str+" ";
-                  f[n].setPosition(newPos);                   
-                 }    */
+		//draw
+
+		if (window->Drawing) {
+			DrawingTool::Draw(window, window->bufferDC, points);
+		}
+		
+		//finish
+		hdc = BeginPaint(hWnd, &paintStruct);
+		BitBlt(hdc, paintStruct.rcPaint.left, paintStruct.rcPaint.top, paintStruct.rcPaint.right - paintStruct.rcPaint.left,
+			paintStruct.rcPaint.bottom - paintStruct.rcPaint.top, window->bufferDC, paintStruct.rcPaint.left, paintStruct.rcPaint.top, SRCCOPY);
+		EndPaint(hWnd, &paintStruct);
+		break; */
 
 // Обработчик сообщений для окна "О программе".
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
