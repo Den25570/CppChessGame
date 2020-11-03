@@ -21,8 +21,8 @@ struct BoardImageInfo {
 
 struct BoardInfo {
 	float boardSizeMult;
-	int xPos;
-	int yPos;
+	Rect rect;
+	RECT tagRect;
 };
 
 struct FigureImageInfo {
@@ -35,6 +35,8 @@ public:
 	//actual board
 	Figure* figures[8][8];
 	Figure* selectedFigure;
+	bool beatbleRegionsForWhite[8][8];
+	bool beatbleRegionsForBlack[8][8];
 
 	//figure sprites data
 	Bitmap* figureSprites;
@@ -47,11 +49,18 @@ public:
 	Image* sprite;
 
 	bool TrySelectFigure(int x, int y);
-	bool TrySetFigureInCell(int x, int y);
+	bool TryMove(int x, int y);
 	void SetUpFigures();
+	void SetAllPossibleMoves();
+
+	RECT AIMove(int side);
 
 private:
 	std::vector<int> selectedCell;
 
-	std::vector<int> SelectCell(int x, int y);
+	std::vector<int> selectCell(int x, int y);
+	void setPossibleMoves(Point position);
+	void setAllCellsOnDirection(Point src, Point dir, int maxMoves = INT_MAX, int beatFlag = 0);
+	bool isKingBeatable(Point pos);
+	bool validateCoords(int x, int y, int side);
 };

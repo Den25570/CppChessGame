@@ -15,6 +15,7 @@ WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки за�
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
 WindowPainter windowPainter;                    // 
 Board board;
+LPRECT cursorClip;
 bool isDragging = false;
 bool isMemorized = false;
 
@@ -147,7 +148,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
         //window init
         windowPainter.LoadSprites(&board);
-        windowPainter.SetWindow(hWnd);    
+        windowPainter.SetWindow(hWnd, &board);    
         windowPainter.CreateBuffer(hWnd);
 
         //game init
@@ -190,6 +191,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 windowPainter.DrawField(&board);
                 windowPainter.DrawFigures(&board);
                 if (isDragging && !isMemorized) {
+                    windowPainter.DrawHintMoves(&board);
+
                     BitBlt(windowPainter.memoryDC, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left,
                         ps.rcPaint.bottom - ps.rcPaint.top, windowPainter.bufferDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
                     isMemorized = true;
@@ -204,17 +207,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_SIZE:
-        windowPainter.SetWindow(hWnd);
+        windowPainter.SetWindow(hWnd, &board);
         break;
     case WM_SIZING:
-        windowPainter.SetWindow(hWnd);
+        windowPainter.SetWindow(hWnd, &board);
         break;
     case WM_MOUSEMOVE:
         if (isDragging) {
-            windowPainter.xMousePos = LOWORD(lParam);
-            windowPainter.yMousePos = HIWORD(lParam);
+            if (ClipCursor(&board.boardInfo.tagRect)) {
+                windowPainter.xMousePos = LOWORD(lParam);
+                windowPainter.yMousePos = HIWORD(lParam);
 
-            InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
+                InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
+            }           
         }
         break;
     case WM_LBUTTONDOWN: 
@@ -223,6 +228,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 windowPainter.xMousePos = LOWORD(lParam);
                 windowPainter.yMousePos = HIWORD(lParam);
 
+                GetClipCursor(cursorClip);
                 isDragging = true;
                 isMemorized = false;
                 InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
@@ -231,11 +237,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_LBUTTONUP:
         if (isDragging) {
-            if (board.TrySetFigureInCell(LOWORD(lParam), HIWORD(lParam))) {
-                isDragging = false;
-                isMemorized = false;
-                InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
-            }    
+            if (board.TryMove(LOWORD(lParam), HIWORD(lParam))) {
+            }  
+            ClipCursor(cursorClip);
+            isDragging = false;
+            isMemorized = false;
+            InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
         }
         break;
     case WM_DESTROY:

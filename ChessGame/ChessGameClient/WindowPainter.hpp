@@ -21,13 +21,14 @@ public:
 
 	void DrawField(Board* board);
 	void DrawFigures(Board* board);
-	void DrawSelectedFigure(Board* bnoard);
+	void DrawSelectedFigure(Board* board);
+	void DrawHintMoves(Board* board);
 
 	void LoadSprites(Board* board);
 
 	void CreateBuffer(HWND hwnd);
 	void SetHDC(HDC hdc);
-	void SetWindow(HWND hwnd);
+	void SetWindow(HWND hwnd, Board* board);
 
 private:
 	HDC currentHDC;	

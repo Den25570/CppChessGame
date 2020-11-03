@@ -39,13 +39,7 @@ void WindowPainter::LoadBoardSprite(Board* board, std::wstring path) {
 }
 
 void WindowPainter::DrawField(Board* board) {
-	INT height = this->windowRect.bottom - this->windowRect.top;
-	INT width = (board->sprite->GetWidth() / (board->sprite->GetHeight() * 1.0)) * height;
-	board->boardInfo.boardSizeMult = (1.0f * height) / (board->boardImageInfo.height);
-	board->boardInfo.xPos = 0;
-	board->boardInfo.yPos = 0;
-
-	this->currentGraphics->DrawImage(board->sprite, board->boardInfo.xPos, board->boardInfo.yPos, width, height);
+	this->currentGraphics->DrawImage(board->sprite, board->boardInfo.rect);
 }
 
 void WindowPainter::DrawFigures(Board* board) {
@@ -75,6 +69,30 @@ void WindowPainter::DrawSelectedFigure(Board* board)
 	}	
 }
 
+void WindowPainter::DrawHintMoves(Board* board)
+{
+	if (board->selectedFigure != nullptr) {
+
+		Pen hintPen(Color(50, 50, 205, 50), 1);
+		SolidBrush hintBrush(Color(50, 50, 205, 50));
+
+		for (int i = 0; i < 8; i++) {
+			for (int j = 0; j < 8; j++) {
+				if (board->selectedFigure->possibleMovesMap[i][j]) {
+					float x, y, height, width;
+					x = (board->boardImageInfo.topOffset + i * board->boardImageInfo.cellWidth) * board->boardInfo.boardSizeMult + 1;
+					y = (board->boardImageInfo.leftOffset + j * board->boardImageInfo.cellHeight) * board->boardInfo.boardSizeMult - 1;
+					width = board->boardImageInfo.cellWidth * board->boardInfo.boardSizeMult;
+					height = board->boardImageInfo.cellHeight * board->boardInfo.boardSizeMult;
+
+					this->currentGraphics->DrawRectangle(&hintPen, x, y, width, height);
+					this->currentGraphics->FillRectangle(&hintBrush, x + 1, y + 1, width, height);
+				}				
+			}
+		}		
+	}
+}
+
 void WindowPainter::CreateBuffer(HWND hwnd) {
 	HDC tmpHdc = GetWindowDC(hwnd);
 	this->bufferDC = CreateCompatibleDC(tmpHdc);
@@ -98,6 +116,20 @@ void WindowPainter::SetHDC(HDC hdc) {
 	this->currentGraphics = Gdiplus::Graphics::FromHDC(hdc);
 }
 
-void WindowPainter::SetWindow(HWND hwnd) {
+void WindowPainter::SetWindow(HWND hwnd, Board * board) {
 	GetClientRect(hwnd, &this->windowRect);
+
+	board->boardInfo.rect.Height = this->windowRect.bottom - this->windowRect.top;
+	board->boardInfo.rect.Width = (board->boardImageInfo.width / (board->boardImageInfo.height * 1.0)) * board->boardInfo.rect.Height;
+	board->boardInfo.boardSizeMult = (1.0f * board->boardInfo.rect.Height) / (board->boardImageInfo.height);
+	board->boardInfo.rect.X = 0;
+	board->boardInfo.rect.Y = 0;
+
+	board->boardInfo.tagRect.top = 0;
+	board->boardInfo.tagRect.left = 0;
+	board->boardInfo.tagRect.right = board->boardInfo.tagRect.left + board->boardInfo.rect.Width;
+	board->boardInfo.tagRect.bottom = board->boardInfo.tagRect.top + board->boardInfo.rect.Height;
+
+	ClientToScreen(hwnd, reinterpret_cast<POINT*>(&board->boardInfo.tagRect.left)); // convert top-left
+	ClientToScreen(hwnd, reinterpret_cast<POINT*>(&board->boardInfo.tagRect.right)); // convert bottom-right
 }
