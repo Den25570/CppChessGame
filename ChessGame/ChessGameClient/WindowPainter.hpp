@@ -12,6 +12,10 @@ using namespace Gdiplus;
 
 class WindowPainter {
 public:
+	RECT windowRect;
+	int xMousePos;
+	int yMousePos;
+
 	void DrawField(Board* board);
 	void DrawFigures(Board* board);
 
@@ -21,7 +25,6 @@ public:
 	void SetWindow(HWND hwnd);
 
 private:
-	RECT windowRect;
 	HDC currentHDC;
 	Graphics* currentGraphics;
 

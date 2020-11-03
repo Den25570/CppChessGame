@@ -5,6 +5,7 @@
 #include "ChessGameClient.h"
 #include "WindowPainter.hpp"
 #include "Board.hpp"
+#include <iostream>
 
 #define MAX_LOADSTRING 100
 
@@ -14,6 +15,7 @@ WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки за�
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
 WindowPainter windowPainter;                    // 
 Board board;
+bool isDragging = false;
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -184,6 +186,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_SIZING:
         windowPainter.SetWindow(hWnd);
         break;
+    case WM_MOUSEMOVE:
+        if (isDragging) {
+            windowPainter.xMousePos = LOWORD(lParam);
+            windowPainter.yMousePos = HIWORD(lParam);
+
+            InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
+        }
+        break;
+    case WM_LBUTTONDOWN: 
+        if (!isDragging) {
+            if (board.TrySelectFigure(LOWORD(lParam), HIWORD(lParam))) {
+                isDragging = true;
+                InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
+            }           
+        }
+        break;
+    case WM_LBUTTONUP:
+        if (isDragging) {
+            if (board.TrySetFigureInCell(LOWORD(lParam), HIWORD(lParam))) {
+                isDragging = false;
+                InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
+            }    
+        }
+        break;
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
@@ -192,6 +218,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return 0;
 }
+
+/*if (e.type == Event::MouseButtonPressed)
+                if (e.key.code == Mouse::Left)
+                  for(int i=0;i<32;i++)
+                  if (f[i].getGlobalBounds().contains(pos.x,pos.y))
+                      {
+                       isMove=true; n=i;
+                       dx=pos.x - f[i].getPosition().x;
+                       dy=pos.y - f[i].getPosition().y;
+                       oldPos  =  f[i].getPosition();
+                      }
+
+             if (e.type == Event::MouseButtonReleased)
+                if (e.key.code == Mouse::Left)
+                 {
+                  isMove=false;
+                  Vector2f p = f[n].getPosition() + Vector2f(size/2,size/2);
+                  newPos = Vector2f( size*int(p.x/size), size*int(p.y/size) );
+                  str = toChessNote(oldPos)+toChessNote(newPos);
+                  move(str); 
+                  if (oldPos!=newPos) position+=str+" ";
+                  f[n].setPosition(newPos);                   
+                 }    */
 
 // Обработчик сообщений для окна "О программе".
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)

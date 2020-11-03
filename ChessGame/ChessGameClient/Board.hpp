@@ -34,6 +34,7 @@ class Board {
 public:
 	//actual board
 	Figure* figures[8][8];
+	Figure* selectedFigure;
 
 	//figure sprites data
 	Bitmap* figureSprites;
@@ -45,5 +46,12 @@ public:
 	BoardInfo boardInfo;
 	Image* sprite;
 
+	bool TrySelectFigure(int x, int y);
+	bool TrySetFigureInCell(int x, int y);
 	void SetUpFigures();
+
+private:
+	std::vector<int> selectedCell;
+
+	std::vector<int> SelectCell(int x, int y);
 };
