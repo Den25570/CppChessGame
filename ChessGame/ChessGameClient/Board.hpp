@@ -60,7 +60,7 @@ private:
 
 	std::vector<int> selectCell(int x, int y);
 	void setPossibleMoves(Point position);
-	void setAllCellsOnDirection(Point src, Point dir, int maxMoves = INT_MAX, int beatFlag = 0);
+	void setAllCellsOnDirection(Point src, Point dir, int maxMoves = INT_MAX);
 	bool isKingBeatable(Point pos);
 	bool validateCoords(int x, int y, int side);
 };
