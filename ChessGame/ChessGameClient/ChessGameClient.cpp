@@ -5,6 +5,7 @@
 #include "ChessGameClient.h"
 #include "WindowPainter.hpp"
 #include "Board.hpp"
+#include "Game.hpp"
 #include <iostream>
 
 #define MAX_LOADSTRING 100
@@ -14,7 +15,7 @@ HINSTANCE hInst;                                // текущий экземпл
 WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
 WindowPainter windowPainter;                    // 
-Board board;
+Game game;
 LPRECT cursorClip;
 bool isDragging = false;
 bool isMemorized = false;
@@ -147,12 +148,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
         //window init
-        windowPainter.LoadSprites(&board);
-        windowPainter.SetWindow(hWnd, &board);    
+        windowPainter.LoadSprites(&game.board);
+        windowPainter.SetWindow(hWnd, &game.board);
         windowPainter.CreateBuffer(hWnd);
 
         //game init
-        board.SetUpFigures();
+        game.InitGame();
+
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -188,17 +190,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             // draw
             if (!isMemorized) {
-                windowPainter.DrawField(&board);
-                windowPainter.DrawFigures(&board);
+                windowPainter.DrawField(&game.board);
+                windowPainter.DrawFigures(&game.board);
                 if (isDragging && !isMemorized) {
-                    windowPainter.DrawHintMoves(&board);
+                    windowPainter.DrawHintMoves(&game.board);
 
                     BitBlt(windowPainter.memoryDC, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left,
                         ps.rcPaint.bottom - ps.rcPaint.top, windowPainter.bufferDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
                     isMemorized = true;
                 }
             }           
-            windowPainter.DrawSelectedFigure(&board);
+            windowPainter.DrawSelectedFigure(&game.board);
 
             //finish
             BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left,
@@ -207,14 +209,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_SIZE:
-        windowPainter.SetWindow(hWnd, &board);
+        windowPainter.SetWindow(hWnd, &game.board);
         break;
     case WM_SIZING:
-        windowPainter.SetWindow(hWnd, &board);
+        windowPainter.SetWindow(hWnd, &game.board);
         break;
     case WM_MOUSEMOVE:
         if (isDragging) {
-            if (ClipCursor(&board.boardInfo.tagRect)) {
+            if (ClipCursor(&game.board.boardInfo.tagRect)) {
                 windowPainter.xMousePos = LOWORD(lParam);
                 windowPainter.yMousePos = HIWORD(lParam);
 
@@ -224,7 +226,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_LBUTTONDOWN: 
         if (!isDragging) {
-            if (board.TrySelectFigure(LOWORD(lParam), HIWORD(lParam))) {
+            if (game.TrySelectFigure(Point(LOWORD(lParam), HIWORD(lParam)))) {
                 windowPainter.xMousePos = LOWORD(lParam);
                 windowPainter.yMousePos = HIWORD(lParam);
 
@@ -237,8 +239,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_LBUTTONUP:
         if (isDragging) {
-            if (board.TryMove(LOWORD(lParam), HIWORD(lParam))) {
-            }  
+            game.TryMove(Point(LOWORD(lParam), HIWORD(lParam)));
             ClipCursor(cursorClip);
             isDragging = false;
             isMemorized = false;

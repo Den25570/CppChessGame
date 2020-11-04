@@ -1,23 +1,29 @@
 #include "Board.hpp"
 #include <string>
 
-bool Board::TrySelectFigure(int x, int y)
+bool Board::TrySelectFigure(Point pos, int side)
 {
-	selectedCell = selectCell(x, y);
-	this->selectedFigure = this->figures[selectedCell[0]][selectedCell[1]];
-	return this->selectedFigure != nullptr;
+	this->selectedFigure = nullptr;
+	selectedCell = selectCell(pos);
+
+	this->selectedFigure = this->figures[selectedCell.X][selectedCell.Y];
+	if (this->selectedFigure->side == side)
+		return this->selectedFigure != nullptr;
+	else
+		return false;
+	
 }
 
-bool Board::TryMove(int x, int y)
+bool Board::TryMove(Point pos)
 {
-	std::vector<int> destCell = selectCell(x, y);
-	if (this->selectedFigure->possibleMovesMap[destCell[0]][destCell[1]]) {
+	Point destCell = selectCell(pos);
+	if (this->selectedFigure->possibleMovesMap[destCell.X][destCell.Y]) {
 		//move
-		figures[selectedCell[0]][selectedCell[1]] = nullptr;
-		if (figures[destCell[0]][destCell[1]] != nullptr) {
-			delete(figures[destCell[0]][destCell[1]]);
+		figures[selectedCell.X][selectedCell.Y] = nullptr;
+		if (figures[destCell.X][destCell.Y] != nullptr) {
+			delete(figures[destCell.X][destCell.Y]);
 		}
-		figures[destCell[0]][destCell[1]] = this->selectedFigure;
+		figures[destCell.X][destCell.Y] = this->selectedFigure;
 
 		this->selectedFigure->movedOnce = true;
 
@@ -32,11 +38,9 @@ bool Board::TryMove(int x, int y)
 		this->selectedFigure = nullptr;
 		return false;
 	}
-
-
 }
 
-void Board::SetUpFigures() {
+void Board::InitGame() {
 	Figure* figures[8][8] = {
 		new Figure(Rook, 1),new Figure(Knight, 1),new Figure(Bishop, 1),new Figure(Queen, 1),new Figure(King, 1),new Figure(Bishop, 1),new Figure(Knight, 1),new Figure(Rook, 1),
 		new Figure(Pawn, 1),new Figure(Pawn, 1),new Figure(Pawn, 1),new Figure(Pawn, 1),new Figure(Pawn, 1),new Figure(Pawn, 1),new Figure(Pawn, 1),new Figure(Pawn, 1),
@@ -72,7 +76,7 @@ void Board::setPossibleMoves(Point position)
 
 		for (int i = 1; i <= 1 + !figure->movedOnce; i++) {
 			x = position.X; y = position.Y + (figure->side ? 1 : -1) * i;
-			if (validateCoords(x, y, figure->side) && (this->figures[x][y] == nullptr))
+			if (validateCoords(Point(x, y), figure->side) && (this->figures[x][y] == nullptr))
 				figure->possibleMovesMap[x][y] = true;
 			else
 				break;
@@ -80,7 +84,7 @@ void Board::setPossibleMoves(Point position)
 
 		for (int i = -1; i <= 1; i += 2) {
 			x = position.X + i; y = position.Y + (figure->side ? 1 : -1);
-			if (validateCoords(x, y, figure->side)) {
+			if (validateCoords(Point(x, y), figure->side)) {
 				if ((this->figures[x][y] != nullptr && this->figures[x][y]->side != figure->side)) {
 					figure->possibleMovesMap[x][y] = true;
 				}
@@ -103,9 +107,9 @@ void Board::setPossibleMoves(Point position)
 		for (int i = -1; i <= 1; i += 2) {
 			for (int j = -1; j <= 1; j+=2) {
 				y = position.Y - 2 * i; x = position.X - 1 * j;
-				if (validateCoords(x, y, figure->side) && (this->figures[x][y] == nullptr || this->figures[x][y]->side != figure->side))
+				if (validateCoords(Point(x, y), figure->side) && (this->figures[x][y] == nullptr || this->figures[x][y]->side != figure->side))
 					figure->possibleMovesMap[x][y] = true;
-				else if (validateCoords(x, y, figure->side)) {
+				else if (validateCoords(Point(x, y), figure->side)) {
 					if (figure->side == 0)
 						this->beatbleRegionsForWhite[x][y] = true;
 					else if (figure->side == 1)
@@ -113,9 +117,9 @@ void Board::setPossibleMoves(Point position)
 				}
 
 				y = position.Y - 1 * i; x = position.X - 2 * j;
-				if (validateCoords(x, y, figure->side) && (this->figures[x][y] == nullptr || this->figures[x][y]->side != figure->side))
+				if (validateCoords(Point(x, y), figure->side) && (this->figures[x][y] == nullptr || this->figures[x][y]->side != figure->side))
 					figure->possibleMovesMap[x][y] = true;
-				else if (validateCoords(x, y, figure->side)) {
+				else if (validateCoords(Point(x, y), figure->side)) {
 					if (figure->side == 0)
 						this->beatbleRegionsForWhite[x][y] = true;
 					else if (figure->side == 1)
@@ -205,21 +209,21 @@ RECT Board::AIMove(int side)
 	return RECT();
 }
 
-std::vector<int> Board::selectCell(int x, int y)
+Point Board::selectCell(Point pos)
 {
 	int startX = this->boardInfo.rect.X + this->boardImageInfo.leftOffset * this->boardInfo.boardSizeMult;
 	int startY = this->boardInfo.rect.Y + this->boardImageInfo.topOffset * this->boardInfo.boardSizeMult;
-	int boardX = x - startX;
-	int boardY = y - startY;
+	int boardX = pos.X - startX;
+	int boardY = pos.Y - startY;
 	int i = boardX / (this->boardImageInfo.cellWidth * this->boardInfo.boardSizeMult);
 	int j = boardY / (this->boardImageInfo.cellHeight * this->boardInfo.boardSizeMult);
-	return std::vector<int> { i, j };
+	return Point(i, j);
 }
 
 void Board::setAllCellsOnDirection(Point src, Point dir, int maxMoves)
 {
 	Figure* figure = this->figures[src.X][src.Y];
-	for (int i = 1, x = src.X + dir.X, y = src.Y + dir.Y; i <= maxMoves && validateCoords(x, y, figure->side); i++, x += dir.X, y += dir.Y) {
+	for (int i = 1, x = src.X + dir.X, y = src.Y + dir.Y; i <= maxMoves && validateCoords(Point(x, y), figure->side); i++, x += dir.X, y += dir.Y) {
 		Figure* dstFigure = this->figures[x][y];
 
 		if (dstFigure != nullptr) {
@@ -247,7 +251,7 @@ bool Board::isKingBeatable(Point pos)
 	return true;
 }
 
-bool Board::validateCoords(int x, int y, int side)
+bool Board::validateCoords(Point pos, int side)
 {
-	return (x < 8 && y < 8 && x >= 0 && y >= 0);
+	return (pos.X < 8 && pos.Y < 8 && pos.X >= 0 && pos.Y >= 0);
 }

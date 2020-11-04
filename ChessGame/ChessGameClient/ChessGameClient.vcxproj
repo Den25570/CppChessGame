@@ -143,6 +143,7 @@
     <ClInclude Include="ChessGameClient.h" />
     <ClInclude Include="Figure.hpp" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="Game.hpp" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WindowPainter.hpp" />
@@ -150,6 +151,7 @@
   <ItemGroup>
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="ChessGameClient.cpp" />
+    <ClCompile Include="Game.cpp" />
     <ClCompile Include="WindowPainter.cpp" />
   </ItemGroup>
   <ItemGroup>

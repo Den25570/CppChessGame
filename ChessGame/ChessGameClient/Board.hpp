@@ -48,19 +48,19 @@ public:
 	BoardInfo boardInfo;
 	Image* sprite;
 
-	bool TrySelectFigure(int x, int y);
-	bool TryMove(int x, int y);
-	void SetUpFigures();
+	bool TrySelectFigure(Point pos, int side);
+	bool TryMove(Point pos);
+	void InitGame();
 	void SetAllPossibleMoves();
 
 	RECT AIMove(int side);
 
 private:
-	std::vector<int> selectedCell;
+	Point selectedCell;
 
-	std::vector<int> selectCell(int x, int y);
+	Point selectCell(Point pos);
 	void setPossibleMoves(Point position);
 	void setAllCellsOnDirection(Point src, Point dir, int maxMoves = INT_MAX);
 	bool isKingBeatable(Point pos);
-	bool validateCoords(int x, int y, int side);
+	bool validateCoords(Point, int side);
 };
