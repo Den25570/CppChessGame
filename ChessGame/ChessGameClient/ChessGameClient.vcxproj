@@ -88,6 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>D:\Projects\CppChessGame\ChessGame\ChessEngine;D:\Projects\CppChessGame\ChessGame\ChessData;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -141,7 +142,7 @@
   <ItemGroup>
     <ClInclude Include="Board.hpp" />
     <ClInclude Include="ChessGameClient.h" />
-    <ClInclude Include="Figure.hpp" />
+    <ClInclude Include="Engine.hpp" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Game.hpp" />
     <ClInclude Include="Resource.h" />
@@ -151,6 +152,7 @@
   <ItemGroup>
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="ChessGameClient.cpp" />
+    <ClCompile Include="Engine.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="WindowPainter.cpp" />
   </ItemGroup>
@@ -162,6 +164,14 @@
     <Image Include="ChessGameClient.ico" />
     <Image Include="GameField.jpg" />
     <Image Include="small.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ChessData\ChessData.vcxproj">
+      <Project>{f6e028a2-d0f9-4708-bd44-2fffef0e6bc4}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\ChessEngine\ChessEngine.vcxproj">
+      <Project>{18e2bad4-233b-4602-9584-88227b781241}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

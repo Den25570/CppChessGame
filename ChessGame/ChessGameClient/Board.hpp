@@ -7,6 +7,7 @@
 using namespace Gdiplus;
 #pragma comment (lib,"Gdiplus.lib")
 #include "Figure.hpp"
+#include "Engine.hpp"
 
 struct BoardImageInfo {
 	int width;
@@ -33,7 +34,7 @@ struct FigureImageInfo {
 class Board {
 public:
 	//actual board
-	Figure* figures[8][8];
+	std::vector<std::vector<Figure*>> figures;
 	Figure* backUpFigures[8][8];
 	Figure* selectedFigure;
 
@@ -58,7 +59,4 @@ private:
 	Point selectedCell;
 
 	Point selectCell(Point pos);
-	bool isKingBeatable(Point pos);
-	bool validateCoords(Point, int side);
-	void filterAllMoves();
 };

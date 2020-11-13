@@ -1,9 +1,9 @@
 #include "Engine.hpp"
 
-std::vector<Point> selectBestMove(std::vector<std::vector<Figure*>>* map, int player)
+std::vector<sPoint> selectBestMove(std::vector<std::vector<Figure*>>* map, int player)
 {
-	Point bestFigureToMove; bestFigureToMove.x = 0; bestFigureToMove.y = 0;
-	Point bestMove; bestMove.x = 0; bestMove.y = 0;
+	sPoint bestFigureToMove; bestFigureToMove.X = 0; bestFigureToMove.Y = 0;
+	sPoint bestMove; bestMove.X = 0; bestMove.Y = 0;
 	int bestMoveScore = -INT32_MAX;
 	for (int xPos = 0; xPos < 8; xPos++) {
 		for (int yPos = 0; yPos < 8; yPos++) {
@@ -18,17 +18,17 @@ std::vector<Point> selectBestMove(std::vector<std::vector<Figure*>>* map, int pl
 							//find best enemy move
 							std::vector<std::vector<Figure*>> newMap = *map;
 							simulateMove(&newMap, xPos, yPos, xDst, yDst);
-							
+
 							int bestEnemyMoveScore = -INT32_MAX;
 							for (int xPos = 0; xPos < 8; xPos++) {
 								for (int yPos = 0; yPos < 8; yPos++) {
 									//foreach enemy figure find moves
 									if (newMap[xPos][yPos] && newMap[xPos][yPos]->side == player) {
 										std::vector<std::vector<int>> moves = getPossibleMoves(&newMap, xPos, yPos, player);
-										Point bestDst = getMaxValue(&moves);
+										sPoint bestDst = getMaxValue(&moves);
 										//select best enemy move
-										if (moves[bestDst.x][bestDst.y] > bestEnemyMoveScore) {
-											bestEnemyMoveScore = moves[bestDst.x][bestDst.y];
+										if (moves[bestDst.X][bestDst.Y] > bestEnemyMoveScore) {
+											bestEnemyMoveScore = moves[bestDst.X][bestDst.Y];
 										}
 									}
 								}
@@ -36,10 +36,10 @@ std::vector<Point> selectBestMove(std::vector<std::vector<Figure*>>* map, int pl
 							//select best move
 							if (moveScore - bestEnemyMoveScore > bestMoveScore) {
 								bestMoveScore = moveScore - bestEnemyMoveScore;
-								bestMove.x = xDst;
-								bestMove.y = yDst;
-								bestFigureToMove.x = xPos;
-								bestFigureToMove.y = yPos;
+								bestMove.X = xDst;
+								bestMove.Y = yDst;
+								bestFigureToMove.X = xPos;
+								bestFigureToMove.Y = yPos;
 							}
 						}
 					}
@@ -47,6 +47,7 @@ std::vector<Point> selectBestMove(std::vector<std::vector<Figure*>>* map, int pl
 			}
 		}
 	}
+	return std::vector<sPoint>{bestFigureToMove, bestMove};
 }
 
 
@@ -58,32 +59,32 @@ std::vector<std::vector<int>> getPossibleMoves(std::vector<std::vector<Figure*>>
 {
 	Figure* figure = (*map)[xPos][yPos];
 
-	std::vector<std::vector<int>> result = {{-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX},
+	std::vector<std::vector<int>> result = { {-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX},
 											{-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX},
 											{-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX},
 											{-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX},
 											{-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX},
 											{-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX},
 											{-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX},
-											{-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX}};
+											{-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX,-INT32_MAX} };
 
-	int x, y;
+	int X, Y;
 	switch (figure->type) {
 	case FigureType::Pawn:
 
 		for (int i = 1; i <= 1 + !figure->movedOnce; i++) {
-			x = xPos; y = yPos + (figure->side ? 1 : -1) * i;
-			if (validateCoords(x, y) && ((*map)[x][y] == nullptr))
-				result[x][y] = evaluateCurrentMove(map, xPos, yPos, x, y, player);
+			X = xPos; Y = yPos + (figure->side ? 1 : -1) * i;
+			if (validateCoords(X, Y) && ((*map)[X][Y] == nullptr))
+				result[X][Y] = evaluateCurrentMove(map, xPos, yPos, X, Y, player);
 			else
 				break;
 		}
 
 		for (int i = -1; i <= 1; i += 2) {
-			x = xPos + i; y = yPos + (figure->side ? 1 : -1);
-			if (validateCoords(x, y)) {
-				if (((*map)[x][y] != nullptr && (*map)[x][y]->side != figure->side)) {
-					result[x][y] = evaluateCurrentMove(map, xPos, yPos, x, y, player);
+			X = xPos + i; Y = yPos + (figure->side ? 1 : -1);
+			if (validateCoords(X, Y)) {
+				if (((*map)[X][Y] != nullptr && (*map)[X][Y]->side != figure->side)) {
+					result[X][Y] = evaluateCurrentMove(map, xPos, yPos, X, Y, player);
 				}
 			}
 
@@ -99,13 +100,13 @@ std::vector<std::vector<int>> getPossibleMoves(std::vector<std::vector<Figure*>>
 	case FigureType::Knight:
 		for (int i = -1; i <= 1; i += 2) {
 			for (int j = -1; j <= 1; j += 2) {
-				y = yPos - 2 * i; x = xPos - 1 * j;
-				if (validateCoords(x, y) && ((*map)[x][y] == nullptr || (*map)[x][y]->side != figure->side))
-					result[x][y] = evaluateCurrentMove(map, xPos, yPos, x, y, player);
+				Y = yPos - 2 * i; X = xPos - 1 * j;
+				if (validateCoords(X, Y) && ((*map)[X][Y] == nullptr || (*map)[X][Y]->side != figure->side))
+					result[X][Y] = evaluateCurrentMove(map, xPos, yPos, X, Y, player);
 
-				y = yPos - 1 * i; x = xPos - 2 * j;
-				if (validateCoords(x, y) && ((*map)[x][y] == nullptr || (*map)[x][y]->side != figure->side))
-					result[x][y] = evaluateCurrentMove(map, xPos, yPos, x, y, player);
+				Y = yPos - 1 * i; X = xPos - 2 * j;
+				if (validateCoords(X, Y) && ((*map)[X][Y] == nullptr || (*map)[X][Y]->side != figure->side))
+					result[X][Y] = evaluateCurrentMove(map, xPos, yPos, X, Y, player);
 			}
 		}
 		break;
@@ -135,23 +136,23 @@ std::vector<std::vector<int>> getPossibleMoves(std::vector<std::vector<Figure*>>
 		break;
 	}
 
-    return result;
+	return result;
 }
 
 void setAllCellsOnDirection(std::vector<std::vector<Figure*>>* map, std::vector<std::vector<int>>* cells, size_t xPos, size_t yPos, size_t xDest, size_t yDest, int maxMoves)
 {
 	Figure* figure = (*map)[xPos][yPos];
-	for (int i = 1, x = xPos + xDest, y = yPos + yDest; i <= maxMoves && validateCoords(x, y); i++, x += xDest, y += yDest) {
-		Figure* dstFigure = (*map)[x][y];
+	for (int i = 1, X = xPos + xDest, Y = yPos + yDest; i <= maxMoves && validateCoords(X, Y); i++, X += xDest, Y += yDest) {
+		Figure* dstFigure = (*map)[X][Y];
 
 		if (dstFigure != nullptr) {
 			if (dstFigure->side != figure->side) {
-				(*cells)[x][y] = evaluateCurrentMove(map, xPos, yPos, x, y, figure->side);
+				(*cells)[X][Y] = evaluateCurrentMove(map, xPos, yPos, X, Y, figure->side);
 			}
 			break;
 		}
 		else {
-			(*cells)[x][y] = evaluateCurrentMove(map, xPos, yPos, x, y, figure->side);
+			(*cells)[X][Y] = evaluateCurrentMove(map, xPos, yPos, X, Y, figure->side);
 		}
 	}
 }
@@ -198,14 +199,14 @@ void simulateMove(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t yP
 //													Utils
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Point getMaxValue(std::vector<std::vector<int>>* values)
+sPoint getMaxValue(std::vector<std::vector<int>>* values)
 {
-	Point pos; pos.x = 0; pos.y = 0;
+	sPoint pos; pos.X = 0; pos.Y = 0;
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
-			if ((*values)[i][j] > (*values)[pos.x][pos.y]) {
-				pos.x = i;
-				pos.y = j;
+			if ((*values)[i][j] > (*values)[pos.X][pos.Y]) {
+				pos.X = i;
+				pos.Y = j;
 			}
 		}
 	}
