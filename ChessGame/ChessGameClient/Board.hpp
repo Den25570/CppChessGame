@@ -34,9 +34,8 @@ class Board {
 public:
 	//actual board
 	Figure* figures[8][8];
+	Figure* backUpFigures[8][8];
 	Figure* selectedFigure;
-	bool beatbleRegionsForWhite[8][8];
-	bool beatbleRegionsForBlack[8][8];
 
 	//figure sprites data
 	Bitmap* figureSprites;
@@ -59,8 +58,9 @@ private:
 	Point selectedCell;
 
 	Point selectCell(Point pos);
-	void setPossibleMoves(Point position);
-	void setAllCellsOnDirection(Point src, Point dir, int maxMoves = INT_MAX);
+	std::vector<std::vector<int>> getPossibleMoves(Point position);
+	void setAllCellsOnDirection(std::vector<std::vector<int>>* cells, Point src, Point dir, int maxMoves = INT_MAX);
 	bool isKingBeatable(Point pos);
 	bool validateCoords(Point, int side);
+	void filterAllMoves();
 };

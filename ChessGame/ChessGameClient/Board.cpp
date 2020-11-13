@@ -7,8 +7,8 @@ bool Board::TrySelectFigure(Point pos, int side)
 	selectedCell = selectCell(pos);
 
 	this->selectedFigure = this->figures[selectedCell.X][selectedCell.Y];
-	if (this->selectedFigure->side == side)
-		return this->selectedFigure != nullptr;
+	if (this->selectedFigure && this->selectedFigure->side == side)
+		return true;
 	else
 		return false;
 	
@@ -61,14 +61,18 @@ void Board::InitGame() {
 	this->SetAllPossibleMoves();
 }
 
-void Board::setPossibleMoves(Point position)
+std::vector<std::vector<int>> Board::getPossibleMoves(Point position)
 {
+	std::vector<std::vector<int>> result = { {false,false,false,false,false,false,false,false},
+	{false,false,false,false,false,false,false,false}, 
+	{false,false,false,false,false,false,false,false}, 
+	{false,false,false,false,false,false,false,false}, 
+	{false,false,false,false,false,false,false,false}, 
+	{false,false,false,false,false,false,false,false}, 
+	{false,false,false,false,false,false,false,false}, 
+	{false,false,false,false,false,false,false,false}, };
+
 	Figure* figure = this->figures[position.X][position.Y];
-	for (int i = 0; i < 8; i++) {
-		for (int j = 0; j < 8; j++) {
-			figure->possibleMovesMap[i][j] = false;
-		}
-	}
 
 	int x, y;
 	switch (figure->type) {
@@ -77,7 +81,7 @@ void Board::setPossibleMoves(Point position)
 		for (int i = 1; i <= 1 + !figure->movedOnce; i++) {
 			x = position.X; y = position.Y + (figure->side ? 1 : -1) * i;
 			if (validateCoords(Point(x, y), figure->side) && (this->figures[x][y] == nullptr))
-				figure->possibleMovesMap[x][y] = true;
+				result[x][y] = true;
 			else
 				break;
 		}
@@ -86,12 +90,8 @@ void Board::setPossibleMoves(Point position)
 			x = position.X + i; y = position.Y + (figure->side ? 1 : -1);
 			if (validateCoords(Point(x, y), figure->side)) {
 				if ((this->figures[x][y] != nullptr && this->figures[x][y]->side != figure->side)) {
-					figure->possibleMovesMap[x][y] = true;
+					result[x][y] = true;
 				}
-				if (figure->side == 0)
-					this->beatbleRegionsForWhite[x][y] = true;
-				else if (figure->side == 1)
-					this->beatbleRegionsForBlack[x][y] = true;
 			}
 
 		}
@@ -99,7 +99,7 @@ void Board::setPossibleMoves(Point position)
 	case FigureType::Bishop:
 		for (int i = -1; i <= 1; i += 2) {
 			for (int j = -1; j <= 1; j += 2) {
-				this->setAllCellsOnDirection(position, Point(i, j));
+				this->setAllCellsOnDirection(&result, position, Point(i, j));
 			}
 		}
 		break;
@@ -108,30 +108,18 @@ void Board::setPossibleMoves(Point position)
 			for (int j = -1; j <= 1; j+=2) {
 				y = position.Y - 2 * i; x = position.X - 1 * j;
 				if (validateCoords(Point(x, y), figure->side) && (this->figures[x][y] == nullptr || this->figures[x][y]->side != figure->side))
-					figure->possibleMovesMap[x][y] = true;
-				else if (validateCoords(Point(x, y), figure->side)) {
-					if (figure->side == 0)
-						this->beatbleRegionsForWhite[x][y] = true;
-					else if (figure->side == 1)
-						this->beatbleRegionsForBlack[x][y] = true;
-				}
+					result[x][y] = true;
 
 				y = position.Y - 1 * i; x = position.X - 2 * j;
 				if (validateCoords(Point(x, y), figure->side) && (this->figures[x][y] == nullptr || this->figures[x][y]->side != figure->side))
-					figure->possibleMovesMap[x][y] = true;
-				else if (validateCoords(Point(x, y), figure->side)) {
-					if (figure->side == 0)
-						this->beatbleRegionsForWhite[x][y] = true;
-					else if (figure->side == 1)
-						this->beatbleRegionsForBlack[x][y] = true;
-				}
+					result[x][y] = true;
 			}
 		}
 		break;
 	case FigureType::Rook:
 		for (int i = -1; i <= 1; i += 2) {
-			this->setAllCellsOnDirection(position, Point(0, i));
-			this->setAllCellsOnDirection(position, Point(i, 0));
+			this->setAllCellsOnDirection(&result, position, Point(0, i));
+			this->setAllCellsOnDirection(&result, position, Point(i, 0));
 		}
 		break;
 	case FigureType::Queen:
@@ -139,7 +127,7 @@ void Board::setPossibleMoves(Point position)
 			for (int j = -1; j <= 1; j += 1) {
 				if (i == 0 && j == 0)
 					continue;
-				this->setAllCellsOnDirection(position, Point(i, j));
+				this->setAllCellsOnDirection(&result, position, Point(i, j));
 			}
 		}
 		break;
@@ -148,49 +136,31 @@ void Board::setPossibleMoves(Point position)
 			for (int j = -1; j <= 1; j += 1) {
 				if (i == 0 && j == 0)
 					continue;
-				this->setAllCellsOnDirection(position, Point(i, j), 1);
+				this->setAllCellsOnDirection(&result, position, Point(i, j), 1);
 			}
 		}
 		break;
 	}
+
+	return result;
 }
 
 void Board::SetAllPossibleMoves()
 {
-	//init danger maps for kings
-	for (int i = 0; i < 8; i++) {
-		for (int j = 0; j < 8; j++) {
-			this->beatbleRegionsForBlack[i][j] = false;
-			this->beatbleRegionsForWhite[i][j] = false;
-		}
-	}
-
 	//process all possible moves
-	Figure* whiteKing = nullptr;
-	Figure* blackKing = nullptr;
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
 			if (this->figures[i][j] != nullptr) {
-				setPossibleMoves(Point(i, j));
-				if (this->figures[i][j]->type == FigureType::King) {
-					if (this->figures[i][j]->side == 0) {
-						whiteKing = this->figures[i][j];
-					}
-					else {
-						blackKing = this->figures[i][j];
+				std::vector<std::vector<int>> moves = getPossibleMoves(Point(i, j));
+				for (int x= 0; x < 8; x++) {
+					for (int y = 0; y < 8; y++) {
+						this->figures[i][j]->possibleMovesMap[x][y] = moves[x][y];
 					}
 				}
-			}		
+			}
 		}
 	}
-
-	//process moves for kings
-	for (int i = 0; i < 8; i++) {
-		for (int j = 0; j < 8; j++) {
-			whiteKing->possibleMovesMap[i][j] &= !this->beatbleRegionsForBlack[i][j];
-			blackKing->possibleMovesMap[i][j] &= !this->beatbleRegionsForWhite[i][j];
-		}
-	}
+//	this->filterAllMoves();
 }
 
 RECT Board::AIMove(int side)
@@ -220,7 +190,7 @@ Point Board::selectCell(Point pos)
 	return Point(i, j);
 }
 
-void Board::setAllCellsOnDirection(Point src, Point dir, int maxMoves)
+void Board::setAllCellsOnDirection(std::vector<std::vector<int>>* cells, Point src, Point dir, int maxMoves)
 {
 	Figure* figure = this->figures[src.X][src.Y];
 	for (int i = 1, x = src.X + dir.X, y = src.Y + dir.Y; i <= maxMoves && validateCoords(Point(x, y), figure->side); i++, x += dir.X, y += dir.Y) {
@@ -228,20 +198,12 @@ void Board::setAllCellsOnDirection(Point src, Point dir, int maxMoves)
 
 		if (dstFigure != nullptr) {
 			if (dstFigure->side != figure->side) {
-					figure->possibleMovesMap[x][y] = true;
+				(*cells)[x][y] = true;
 			}
-			if (figure->side == 0) 
-				this->beatbleRegionsForWhite[x][y] = true;
-			else if (figure->side == 1)
-				this->beatbleRegionsForBlack[x][y] = true;
 			break;
 		}
 		else {
-			figure->possibleMovesMap[x][y] = true;
-			if (figure->side == 0)
-				this->beatbleRegionsForWhite[x][y] = true;
-			else if (figure->side == 1)
-				this->beatbleRegionsForBlack[x][y] = true;
+			(*cells)[x][y] = true;
 		}
 	}
 }
@@ -254,4 +216,38 @@ bool Board::isKingBeatable(Point pos)
 bool Board::validateCoords(Point pos, int side)
 {
 	return (pos.X < 8 && pos.Y < 8 && pos.X >= 0 && pos.Y >= 0);
+}
+
+void Board::filterAllMoves()
+{
+	Point whiteKingPos;
+	Point blackKingPos;
+
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			this->backUpFigures[i][j] = this->figures[i][j];
+			if (this->figures[i][j]->type == FigureType::King && this->figures[i][j]->side == 0)
+				whiteKingPos = Point(i, j);
+			else if (this->figures[i][j]->type == FigureType::King && this->figures[i][j]->side == 1)
+				blackKingPos = Point(i, j);
+		}
+	}
+
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			if (this->figures[i][j] != nullptr) {
+				std::vector<std::vector<int>> moves = getPossibleMoves(Point(i, j));
+				if (this->figures[i][j]->type == FigureType::King && this->figures[i][j]->side == 0) {
+
+				}
+				else if (this->figures[i][j]->type == FigureType::King && this->figures[i][j]->side == 1) {
+
+				}
+				else {
+
+				}
+			}
+		}
+	}
+	
 }
