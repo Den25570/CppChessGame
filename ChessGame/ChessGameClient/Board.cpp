@@ -86,20 +86,20 @@ void Board::SetAllPossibleMoves()
 //	this->filterAllMoves();
 }
 
-RECT Board::AIMove(int side)
+void Board::AIMove(int side)
 {
-	//
-	std::string moveFromEngine = "e2e4";
-	//
+	std::vector<int> move = selectBestMove(&(this->figures), side, 1, 2);
 
-	/*Select Random*/
-	/*for (int i = 0; i < 8; i++) {
-		for (int j = 0; j < 8; j++) {
-			if ()
-		}
-	}*/
+	//move
+	if (figures[move[2]][move[3]] != nullptr) {
+		delete(figures[move[2]][move[3]]);
+	}
+	figures[move[2]][move[3]] = figures[move[0]][move[1]];
+	figures[move[0]][move[1]]->movedOnce = true;
+	figures[move[0]][move[1]] = nullptr;
 
-	return RECT();
+	//update maps
+	this->SetAllPossibleMoves();
 }
 
 Point Board::selectCell(Point pos)

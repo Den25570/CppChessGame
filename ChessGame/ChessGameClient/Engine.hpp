@@ -8,7 +8,7 @@ struct sPoint {
 	int Y;
 };
 
-std::vector<sPoint> selectBestMove(std::vector<std::vector<Figure*>>* map, int player);
+std::vector<int> selectBestMove(std::vector<std::vector<Figure*>>* map, int player, int depth, int maxDepth);
 
 //1. Move generation
 std::vector<std::vector<int>> getPossibleMoves(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t yPos, int player);

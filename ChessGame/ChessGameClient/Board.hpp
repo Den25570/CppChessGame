@@ -53,7 +53,7 @@ public:
 	void InitGame();
 	void SetAllPossibleMoves();
 
-	RECT AIMove(int side);
+	void AIMove(int side);
 
 private:
 	Point selectedCell;

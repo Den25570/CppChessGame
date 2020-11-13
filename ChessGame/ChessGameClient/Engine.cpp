@@ -1,6 +1,6 @@
 #include "Engine.hpp"
 
-std::vector<sPoint> selectBestMove(std::vector<std::vector<Figure*>>* map, int player)
+std::vector<int> selectBestMove(std::vector<std::vector<Figure*>>* map, int player, int depth, int maxDepth)
 {
 	sPoint bestFigureToMove; bestFigureToMove.X = 0; bestFigureToMove.Y = 0;
 	sPoint bestMove; bestMove.X = 0; bestMove.Y = 0;
@@ -11,6 +11,10 @@ std::vector<sPoint> selectBestMove(std::vector<std::vector<Figure*>>* map, int p
 			//foreach figure find moves
 			if ((*map)[xPos][yPos] && (*map)[xPos][yPos]->side == player) {
 				std::vector<std::vector<int>> moves = getPossibleMoves(map, xPos, yPos, player);
+				if ((*map)[xPos][yPos]->type == FigureType::Queen)
+				{
+					int a = 0;
+				}
 				for (int xDst = 0; xDst < 8; xDst++) {
 					for (int yDst = 0; yDst < 8; yDst++) {
 						int moveScore = moves[xDst][yDst];
@@ -20,22 +24,36 @@ std::vector<sPoint> selectBestMove(std::vector<std::vector<Figure*>>* map, int p
 							simulateMove(&newMap, xPos, yPos, xDst, yDst);
 
 							int bestEnemyMoveScore = -INT32_MAX;
+							sPoint bestEnemyMove; bestEnemyMove.X = 0; bestEnemyMove.Y = 0;
 							for (int xPos = 0; xPos < 8; xPos++) {
 								for (int yPos = 0; yPos < 8; yPos++) {
 									//foreach enemy figure find moves
-									if (newMap[xPos][yPos] && newMap[xPos][yPos]->side == player) {
-										std::vector<std::vector<int>> moves = getPossibleMoves(&newMap, xPos, yPos, player);
+									if (newMap[xPos][yPos] && newMap[xPos][yPos]->side != player) {
+										std::vector<std::vector<int>> moves = getPossibleMoves(&newMap, xPos, yPos, !player);
+
 										sPoint bestDst = getMaxValue(&moves);
+
 										//select best enemy move
 										if (moves[bestDst.X][bestDst.Y] > bestEnemyMoveScore) {
 											bestEnemyMoveScore = moves[bestDst.X][bestDst.Y];
+											bestEnemyMove.X = bestDst.X;
+											bestEnemyMove.Y = bestDst.Y;
 										}
 									}
 								}
 							}
+
+							//find best response
+							int nextStepsScore = 0;
+							if (depth < maxDepth) {
+								simulateMove(&newMap, xPos, yPos, xDst, yDst);
+								std::vector<int> nextMove = selectBestMove(&newMap, player, depth + 1, maxDepth);
+								nextStepsScore = nextMove[4];
+							}
+
 							//select best move
-							if (moveScore - bestEnemyMoveScore > bestMoveScore) {
-								bestMoveScore = moveScore - bestEnemyMoveScore;
+							if ((moveScore - bestEnemyMoveScore) + nextStepsScore > bestMoveScore) {
+								bestMoveScore = (moveScore - bestEnemyMoveScore) + nextStepsScore;
 								bestMove.X = xDst;
 								bestMove.Y = yDst;
 								bestFigureToMove.X = xPos;
@@ -47,7 +65,7 @@ std::vector<sPoint> selectBestMove(std::vector<std::vector<Figure*>>* map, int p
 			}
 		}
 	}
-	return std::vector<sPoint>{bestFigureToMove, bestMove};
+	return std::vector<int>{bestFigureToMove.X, bestFigureToMove.Y, bestMove.X, bestMove.Y, bestMoveScore};
 }
 
 
@@ -173,17 +191,17 @@ int evaluateCurrentMove(std::vector<std::vector<Figure*>>* map, size_t xPos, siz
 		switch (destFigure->type)
 		{
 		case FigureType::Pawn:
-			return (destFigure->type == player ? -1 : 1) * 10;
+			return 10;
 		case FigureType::Bishop:
-			return (destFigure->type == player ? -1 : 1) * 30;
+			return 30;
 		case FigureType::Knight:
-			return (destFigure->type == player ? -1 : 1) * 30;
+			return 30;
 		case FigureType::Rook:
-			return (destFigure->type == player ? -1 : 1) * 50;
+			return 50;
 		case FigureType::Queen:
-			return (destFigure->type == player ? -1 : 1) * 90;
+			return 90;
 		case FigureType::King:
-			return (destFigure->type == player ? -1 : 1) * 900;
+			return 900;
 		}
 	}
 	return 0;

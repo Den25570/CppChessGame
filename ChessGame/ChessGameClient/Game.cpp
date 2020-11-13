@@ -27,6 +27,11 @@ bool Game::TryMove(Point pos)
 	if (this->board.TryMove(pos)) {
 		this->CurrentActiveSide = !this->CurrentActiveSide;
 		this->CurrentGameState = MoveState::WaitForMove;
+
+		this->board.AIMove(this->CurrentActiveSide);
+		this->CurrentActiveSide = !this->CurrentActiveSide;
+		this->CurrentGameState = MoveState::WaitForMove;
+
 		return true;
 	}
 	return false;
