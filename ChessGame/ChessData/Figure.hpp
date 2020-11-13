@@ -4,10 +4,10 @@ enum FigureType {
 	King,
 	Queen,
 	Bishop,
-	Knight, 
+	Knight,
 	Rook,
-	Pawn,	
-}; 
+	Pawn,
+};
 
 enum Side {
 	White = 0,

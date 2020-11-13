@@ -58,8 +58,6 @@ private:
 	Point selectedCell;
 
 	Point selectCell(Point pos);
-	std::vector<std::vector<int>> getPossibleMoves(Point position);
-	void setAllCellsOnDirection(std::vector<std::vector<int>>* cells, Point src, Point dir, int maxMoves = INT_MAX);
 	bool isKingBeatable(Point pos);
 	bool validateCoords(Point, int side);
 	void filterAllMoves();

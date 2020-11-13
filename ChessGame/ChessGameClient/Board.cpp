@@ -61,90 +61,6 @@ void Board::InitGame() {
 	this->SetAllPossibleMoves();
 }
 
-std::vector<std::vector<int>> Board::getPossibleMoves(Point position)
-{
-	std::vector<std::vector<int>> result = { {false,false,false,false,false,false,false,false},
-	{false,false,false,false,false,false,false,false}, 
-	{false,false,false,false,false,false,false,false}, 
-	{false,false,false,false,false,false,false,false}, 
-	{false,false,false,false,false,false,false,false}, 
-	{false,false,false,false,false,false,false,false}, 
-	{false,false,false,false,false,false,false,false}, 
-	{false,false,false,false,false,false,false,false}, };
-
-	Figure* figure = this->figures[position.X][position.Y];
-
-	int x, y;
-	switch (figure->type) {
-	case FigureType::Pawn:
-
-		for (int i = 1; i <= 1 + !figure->movedOnce; i++) {
-			x = position.X; y = position.Y + (figure->side ? 1 : -1) * i;
-			if (validateCoords(Point(x, y), figure->side) && (this->figures[x][y] == nullptr))
-				result[x][y] = true;
-			else
-				break;
-		}
-
-		for (int i = -1; i <= 1; i += 2) {
-			x = position.X + i; y = position.Y + (figure->side ? 1 : -1);
-			if (validateCoords(Point(x, y), figure->side)) {
-				if ((this->figures[x][y] != nullptr && this->figures[x][y]->side != figure->side)) {
-					result[x][y] = true;
-				}
-			}
-
-		}
-		break;
-	case FigureType::Bishop:
-		for (int i = -1; i <= 1; i += 2) {
-			for (int j = -1; j <= 1; j += 2) {
-				this->setAllCellsOnDirection(&result, position, Point(i, j));
-			}
-		}
-		break;
-	case FigureType::Knight:
-		for (int i = -1; i <= 1; i += 2) {
-			for (int j = -1; j <= 1; j+=2) {
-				y = position.Y - 2 * i; x = position.X - 1 * j;
-				if (validateCoords(Point(x, y), figure->side) && (this->figures[x][y] == nullptr || this->figures[x][y]->side != figure->side))
-					result[x][y] = true;
-
-				y = position.Y - 1 * i; x = position.X - 2 * j;
-				if (validateCoords(Point(x, y), figure->side) && (this->figures[x][y] == nullptr || this->figures[x][y]->side != figure->side))
-					result[x][y] = true;
-			}
-		}
-		break;
-	case FigureType::Rook:
-		for (int i = -1; i <= 1; i += 2) {
-			this->setAllCellsOnDirection(&result, position, Point(0, i));
-			this->setAllCellsOnDirection(&result, position, Point(i, 0));
-		}
-		break;
-	case FigureType::Queen:
-		for (int i = -1; i <= 1; i += 1) {
-			for (int j = -1; j <= 1; j += 1) {
-				if (i == 0 && j == 0)
-					continue;
-				this->setAllCellsOnDirection(&result, position, Point(i, j));
-			}
-		}
-		break;
-	case FigureType::King:
-		for (int i = -1; i <= 1; i += 1) {
-			for (int j = -1; j <= 1; j += 1) {
-				if (i == 0 && j == 0)
-					continue;
-				this->setAllCellsOnDirection(&result, position, Point(i, j), 1);
-			}
-		}
-		break;
-	}
-
-	return result;
-}
-
 void Board::SetAllPossibleMoves()
 {
 	//process all possible moves
@@ -211,11 +127,6 @@ void Board::setAllCellsOnDirection(std::vector<std::vector<int>>* cells, Point s
 bool Board::isKingBeatable(Point pos)
 {
 	return true;
-}
-
-bool Board::validateCoords(Point pos, int side)
-{
-	return (pos.X < 8 && pos.Y < 8 && pos.X >= 0 && pos.Y >= 0);
 }
 
 void Board::filterAllMoves()
