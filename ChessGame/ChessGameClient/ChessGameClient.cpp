@@ -244,6 +244,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             isDragging = false;
             isMemorized = false;
             InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
+
+            if ((game.CurrentActiveSide == 1 && game.Player2 == AI) || (game.CurrentActiveSide == 0 && game.Player1 == AI)) {
+                game.AIMove();
+            }
         }
         break;
     case WM_DESTROY:

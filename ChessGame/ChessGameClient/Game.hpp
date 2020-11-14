@@ -29,7 +29,7 @@ public:
 
 		//ToDo: select in client
 		this->Player1 = PlayerType::User;
-		this->Player2 = PlayerType::User;
+		this->Player2 = PlayerType::AI;
 
 		this->CurrentActiveSide = 0;
 	}
@@ -37,6 +37,7 @@ public:
 	void InitGame();
 	bool TrySelectFigure(Point pos);
 	bool TryMove(Point pos);
+	void AIMove();
 private:
 
 };

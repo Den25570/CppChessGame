@@ -88,7 +88,7 @@ void Board::SetAllPossibleMoves()
 
 void Board::AIMove(int side)
 {
-	std::vector<int> move = selectBestMove(&(this->figures), side, 1, 2);
+	std::vector<int> move = selectBestMove(&(this->figures), side, 1, 4);
 
 	//move
 	if (figures[move[2]][move[3]] != nullptr) {

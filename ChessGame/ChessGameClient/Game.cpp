@@ -28,12 +28,15 @@ bool Game::TryMove(Point pos)
 		this->CurrentActiveSide = !this->CurrentActiveSide;
 		this->CurrentGameState = MoveState::WaitForMove;
 
-		this->board.AIMove(this->CurrentActiveSide);
-		this->CurrentActiveSide = !this->CurrentActiveSide;
-		this->CurrentGameState = MoveState::WaitForMove;
-
 		return true;
 	}
 	return false;
+}
+
+void Game::AIMove()
+{
+	this->board.AIMove(this->CurrentActiveSide);
+	this->CurrentActiveSide = !this->CurrentActiveSide;
+	this->CurrentGameState = MoveState::WaitForMove;
 }
 
