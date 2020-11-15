@@ -74,10 +74,10 @@ void Board::SetAllPossibleMoves()
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
 			if (this->figures[i][j] != nullptr) {
-				std::vector<std::vector<int>> moves = getPossibleMoves(&(this->figures), i, j, 0);
+				std::vector<std::vector<int>> moves = getPossibleMoves(&(this->figures), i, j, 0, nullptr);
 				for (int x= 0; x < 8; x++) {
 					for (int y = 0; y < 8; y++) {
-						this->figures[i][j]->possibleMovesMap[x][y] = moves[x][y] >= 0;
+						this->figures[i][j]->possibleMovesMap[x][y] = moves[x][y] != -INT32_MAX;
 					}
 				}
 			}
@@ -110,5 +110,6 @@ Point Board::selectCell(Point pos)
 	int boardY = pos.Y - startY;
 	int i = boardX / (this->boardImageInfo.cellWidth * this->boardInfo.boardSizeMult);
 	int j = boardY / (this->boardImageInfo.cellHeight * this->boardInfo.boardSizeMult);
-	return Point(i, j);
+
+	return Point(i > 7 ? 7: i < 0 ? 0 : i, j > 7 ? 7 : j < 0 ? 0 : j);
 }
