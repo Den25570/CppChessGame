@@ -23,6 +23,7 @@ public:
 	void DrawFigures(Board* board);
 	void DrawSelectedFigure(Board* board);
 	void DrawHintMoves(Board* board);
+	void DrawDangerHints(Board* board, int currentSide);
 
 	void LoadSprites(Board* board);
 

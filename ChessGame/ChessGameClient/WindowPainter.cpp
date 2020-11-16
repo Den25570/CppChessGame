@@ -80,17 +80,57 @@ void WindowPainter::DrawHintMoves(Board* board)
 			for (int j = 0; j < 8; j++) {
 				if (board->selectedFigure->possibleMovesMap[i][j]) {
 					float x, y, height, width;
-					x = (board->boardImageInfo.topOffset + i * board->boardImageInfo.cellWidth) * board->boardInfo.boardSizeMult + 1;
-					y = (board->boardImageInfo.leftOffset + j * board->boardImageInfo.cellHeight) * board->boardInfo.boardSizeMult - 1;
+					x = (board->boardImageInfo.topOffset + i * board->boardImageInfo.cellWidth) * board->boardInfo.boardSizeMult;
+					y = (board->boardImageInfo.leftOffset + j * board->boardImageInfo.cellHeight) * board->boardInfo.boardSizeMult;
 					width = board->boardImageInfo.cellWidth * board->boardInfo.boardSizeMult;
-					height = board->boardImageInfo.cellHeight * board->boardInfo.boardSizeMult;
+					height = board->boardImageInfo.cellHeight * board->boardInfo.boardSizeMult + 1;
 
-					this->currentGraphics->DrawRectangle(&hintPen, x, y, width, height);
-					this->currentGraphics->FillRectangle(&hintBrush, x + 1, y + 1, width, height);
+					this->currentGraphics->DrawRectangle(&hintPen, x + 1, y - 1, width, height);
+					this->currentGraphics->FillRectangle(&hintBrush, x + 1, y - 1, width, height);
 				}				
 			}
 		}		
 	}
+}
+
+void WindowPainter::DrawDangerHints(Board* board, int currentSide)
+{
+	if (!board->figuresAttackingKing.empty()) {
+		Pen dangerHintPen(Color(20, 240, 240, 0), 1);
+		SolidBrush dangerHintBrush(Color(20, 240, 240, 0));
+		Pen kDangerHintPen(Color(20, 255, 0, 0), 1);
+		SolidBrush kDangerHintBrush(Color(20, 255, 0, 0));
+
+		float width = board->boardImageInfo.cellWidth * board->boardInfo.boardSizeMult;
+		float height = board->boardImageInfo.cellHeight * board->boardInfo.boardSizeMult + 1;
+
+		bool kingFound = false;
+		for (int i = 0; i < 8 && !kingFound; i++) {
+			for (int j = 0; j < 8 && !kingFound; j++) {
+				if (board->figures[i][j] && board->figures[i][j]->side == currentSide && board->figures[i][j]->type == FigureType::King) {
+					float x = (board->boardImageInfo.topOffset + i * board->boardImageInfo.cellWidth) * board->boardInfo.boardSizeMult;
+					float y = (board->boardImageInfo.leftOffset + j * board->boardImageInfo.cellHeight) * board->boardInfo.boardSizeMult;
+
+					this->currentGraphics->DrawRectangle(&kDangerHintPen, x + 1, y - 1, width, height);
+					this->currentGraphics->FillRectangle(&kDangerHintBrush, x + 1, y - 1, width, height);
+
+					kingFound = true;					
+				}
+			}
+		}
+
+		for (int i = 0; i < board->figuresAttackingKing.size(); i++) {
+			float x = (board->boardImageInfo.topOffset + board->figuresAttackingKing[i].X * board->boardImageInfo.cellWidth) * board->boardInfo.boardSizeMult;
+			float y = (board->boardImageInfo.leftOffset + board->figuresAttackingKing[i].Y * board->boardImageInfo.cellHeight) * board->boardInfo.boardSizeMult;
+
+			this->currentGraphics->DrawRectangle(&dangerHintPen, x + 1 , y - 1, width, height);
+			this->currentGraphics->FillRectangle(&dangerHintBrush, x + 1, y - 1, width, height);
+		}
+	}
+
+	
+
+	
 }
 
 void WindowPainter::CreateBuffer(HWND hwnd) {
