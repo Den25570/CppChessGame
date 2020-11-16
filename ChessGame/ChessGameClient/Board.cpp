@@ -29,9 +29,6 @@ bool Board::TryMove(Point pos)
 
 		this->selectedFigure = nullptr;
 
-		//update maps
-		this->SetAllPossibleMoves();
-
 		return true;
 	}
 	else {
@@ -64,17 +61,16 @@ void Board::InitGame() {
 			this->figures[i][j] = figures[j][i];
 		}
 	}
-
-	this->SetAllPossibleMoves();
 }
 
-void Board::SetAllPossibleMoves()
+void Board::SetAllPossibleMoves(int side)
 {
 	//process all possible moves
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
-			if (this->figures[i][j] != nullptr) {
+			if (this->figures[i][j] && this->figures[i][j]->side == side) {
 				std::vector<std::vector<int>> moves = getPossibleMoves(&(this->figures), i, j, 0, nullptr);
+				bool isKingUnderAttack = FilterUserMoves(&(this->figures), &moves, i, j, side);
 				for (int x= 0; x < 8; x++) {
 					for (int y = 0; y < 8; y++) {
 						this->figures[i][j]->possibleMovesMap[x][y] = moves[x][y] != -INT32_MAX;
@@ -83,7 +79,24 @@ void Board::SetAllPossibleMoves()
 			}
 		}
 	}
-//	this->filterAllMoves();
+}
+
+void Board::GetFiguresAttackingKing(int side)
+{
+	this->figuresAttackingKing.clear();
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			if (this->figures[i][j] && this->figures[i][j]->side == !side) {
+				int bestScore = -INT32_MAX;
+				std::vector<std::vector<int>> moves = getPossibleMoves(&(this->figures), i, j, 0, &bestScore);
+				if (bestScore >= beatScore[0] * 0.75) {
+					{
+						this->figuresAttackingKing.push_back(Point(i, j));
+					}
+				}
+			}
+		}
+	}
 }
 
 void Board::AIMove(int side)
@@ -97,9 +110,6 @@ void Board::AIMove(int side)
 	figures[move[2]][move[3]] = figures[move[0]][move[1]];
 	figures[move[0]][move[1]]->movedOnce = true;
 	figures[move[0]][move[1]] = nullptr;
-
-	//update maps
-	this->SetAllPossibleMoves();
 }
 
 Point Board::selectCell(Point pos)

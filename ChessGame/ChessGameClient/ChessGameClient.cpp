@@ -192,6 +192,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (!isMemorized) {
                 windowPainter.DrawField(&game.board);
                 windowPainter.DrawFigures(&game.board);
+                windowPainter.DrawDangerHints(&game.board, game.CurrentActiveSide);
+
                 if (isDragging && !isMemorized) {
                     windowPainter.DrawHintMoves(&game.board);
 

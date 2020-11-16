@@ -13,7 +13,7 @@ const int beatScore[6] = {
 };
 
 const int pawnMoveScore[8][8] = {
-	0,  0,  0,  0,  0,  0,  0,  0,
+	250,  250,  250,  250,  250,  250,  250,  250,
 	50, 50, 50, 50, 50, 50, 50, 50,
 	10, 10, 20, 30, 30, 20, 10, 10,
 	5,  5, 10, 25, 25, 10,  5,  5,
@@ -93,3 +93,4 @@ void simulateMove(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t yP
 
 //utils
 sPoint getMaxValue(std::vector<std::vector<int>>* values);
+bool FilterUserMoves(std::vector<std::vector<Figure*>>* map, std::vector<std::vector<int>>* moves, int xPos, int yPos, int player);

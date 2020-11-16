@@ -37,6 +37,7 @@ public:
 	std::vector<std::vector<Figure*>> figures;
 	Figure* backUpFigures[8][8];
 	Figure* selectedFigure;
+	std::vector<Point> figuresAttackingKing;
 
 	//figure sprites data
 	Bitmap* figureSprites;
@@ -51,7 +52,8 @@ public:
 	bool TrySelectFigure(Point pos, int side);
 	bool TryMove(Point pos);
 	void InitGame();
-	void SetAllPossibleMoves();
+	void SetAllPossibleMoves(int side);
+	void GetFiguresAttackingKing(int side);
 
 	void AIMove(int side);
 

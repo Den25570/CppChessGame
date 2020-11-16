@@ -6,9 +6,13 @@ void Game::InitGame()
 
 	//ToDo: select in client
 	PlayerType Player1 = PlayerType::User;
-	PlayerType Player2 = PlayerType::User;	
+	PlayerType Player2 = PlayerType::AI;	
 
 	this->board.InitGame();
+	if (Player1 == PlayerType::User)
+		this->board.SetAllPossibleMoves(0);
+	if (Player2 == PlayerType::User)
+		this->board.SetAllPossibleMoves(1);
 
 	CurrentActiveSide = 0;
 	CurrentGameState = MoveState::WaitForMove;
@@ -25,8 +29,14 @@ bool Game::TrySelectFigure(Point pos)
 bool Game::TryMove(Point pos)
 {
 	if (this->board.TryMove(pos)) {
+
 		this->CurrentActiveSide = !this->CurrentActiveSide;
 		this->CurrentGameState = MoveState::WaitForMove;
+
+		if (this->CurrentActiveSide == PlayerType::User) {
+			this->board.SetAllPossibleMoves(this->CurrentActiveSide);
+			this->board.GetFiguresAttackingKing(this->CurrentActiveSide);
+		}		
 
 		return true;
 	}
@@ -36,7 +46,14 @@ bool Game::TryMove(Point pos)
 void Game::AIMove()
 {
 	this->board.AIMove(this->CurrentActiveSide);
+
 	this->CurrentActiveSide = !this->CurrentActiveSide;
 	this->CurrentGameState = MoveState::WaitForMove;
+
+	if (this->CurrentActiveSide == PlayerType::User) {
+		this->board.SetAllPossibleMoves(this->CurrentActiveSide);
+		this->board.GetFiguresAttackingKing(this->CurrentActiveSide);
+	}
+		
 }
 
