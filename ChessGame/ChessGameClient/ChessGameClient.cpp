@@ -351,8 +351,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_LBUTTONUP:
         if (isDragging) {
-            game.TryMove(Point(LOWORD(lParam), HIWORD(lParam)));
-            LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
+            if (game.TryMove(Point(LOWORD(lParam), HIWORD(lParam)))) {
+
+                LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
+            }
             isDragging = false;
             isMemorized = false;
             InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
@@ -364,6 +366,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             else {
                 // wait
             }
+
         }
         break;
     case WM_DESTROY:
