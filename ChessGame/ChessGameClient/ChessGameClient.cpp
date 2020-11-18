@@ -11,6 +11,8 @@
 #include <CommCtrl.h>
 #pragma comment(lib, "ComCtl32.Lib")
 
+#pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")  
+
 #define MAX_LOADSTRING 100
 #define IDC_LISTVIEW 1111
 
@@ -24,6 +26,9 @@ LPRECT cursorClip;
 bool isDragging = false;
 bool isMemorized = false;
 
+Point listViewPos;
+const int listViewWidth = 225;
+
 //Controls
 HWND hWndListView;
 
@@ -33,7 +38,38 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-HWND CreateListView(HWND hwndParent)
+LRESULT CALLBACK ListViewProc(HWND hwnd,
+    UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR)
+{
+    switch (msg)
+    {
+    case WM_NCPAINT:
+    {
+        RECT rc;
+        GetWindowRect(hwnd, &rc);
+        OffsetRect(&rc, -rc.left, -rc.top);
+        auto hdc = GetWindowDC(hwnd);
+        auto hpen = CreatePen(PS_SOLID, 1, RGB(200, 200, 200));
+        auto oldpen = SelectObject(hdc, hpen);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);//draw red frame
+        SelectObject(hdc, oldpen);
+        DeleteObject(oldpen);
+        ReleaseDC(hwnd, hdc);
+
+
+        return 0;
+    }
+
+    case WM_NCDESTROY:
+        RemoveWindowSubclass(hwnd, ListViewProc, 0);
+        break;
+    }
+
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+HWND CreateListView(HWND hwndParent, Point pos)
 {
     INITCOMMONCONTROLSEX icex;           // Structure for control initialization.
     icex.dwICC = ICC_LISTVIEW_CLASSES;
@@ -47,47 +83,32 @@ HWND CreateListView(HWND hwndParent)
     HWND hWndListView = CreateWindowEx(NULL,
         WC_LISTVIEW,
         L"",
-        WS_CHILD | LVS_REPORT | LVS_EDITLABELS,
-        800, 0,
-        rcClient.right - rcClient.left,
+        WS_CHILD |  LVS_REPORT  | LVS_EX_TRANSPARENTBKGND | WS_VSCROLL,
+        pos.X, pos.Y,
+        listViewWidth,
         rcClient.bottom - rcClient.top,
         hwndParent,
         (HMENU)IDC_LISTVIEW,
         GetModuleHandle(NULL),
         NULL);
+    SetWindowSubclass(hWndListView, ListViewProc, 0, NULL);
 
     LVCOLUMN lvc;
     lvc.mask = LVCF_WIDTH | LVCF_TEXT;
-    lvc.cx = 100;
-
-    lvc.pszText = const_cast<LPWSTR>(L"White");
+    lvc.cxMin = 40;
+    lvc.cx = 40;
+    lvc.pszText = const_cast<LPWSTR>(L"№");
     ListView_InsertColumn(hWndListView, 0, &lvc);
 
-    lvc.pszText = const_cast<LPWSTR>(L"Black");
+    lvc.cx = 90;
+    lvc.pszText = const_cast<LPWSTR>(L"White");
     ListView_InsertColumn(hWndListView, 1, &lvc);
+
+    lvc.pszText = const_cast<LPWSTR>(L"Black");
+    ListView_InsertColumn(hWndListView, 2, &lvc);
 
     return (hWndListView);
 }
-
-// SetView: Sets a list-view's window style to change the view.
-// hWndListView: A handle to the list-view control. 
-// dwView:       A value specifying the new view style.
-//
-VOID SetView(HWND hWndListView, DWORD dwView)
-{
-    // Retrieve the current window style. 
-    DWORD dwStyle = GetWindowLong(hWndListView, GWL_STYLE);
-
-    // Set the window style only if the view bits changed.
-    if ((dwStyle & LVS_TYPEMASK) != dwView)
-    {
-        SetWindowLong(hWndListView,
-            GWL_STYLE,
-            (dwStyle & ~LVS_TYPEMASK) | dwView);
-    }               // Logical OR'ing of dwView with the result of 
-}                   // a bitwise AND between dwStyle and 
-                    // the Unary complenent of LVS_TYPEMASK.
-
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -175,8 +196,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Сохранить маркер экземпляра в глобальной переменной
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPED | WS_SYSMENU,
+      CW_USEDEFAULT, 0, 882, 700, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -210,14 +231,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_CREATE:
-        hWndListView = CreateListView(hWnd);
-        SetView(hWndListView, );
-        ShowWindow(hWndListView, SW_SHOWDEFAULT);
-
         //window init
         windowPainter.LoadSprites(&game.board);
         windowPainter.SetWindow(hWnd, &game.board);
         windowPainter.CreateBuffer(hWnd);
+
+        listViewPos = Point(game.board.boardInfo.rect.Width, 0);
+        hWndListView = CreateListView(hWnd, listViewPos);
+        ShowWindow(hWndListView, SW_SHOWDEFAULT);
 
         //game init
         game.InitGame();
@@ -280,19 +301,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_SIZE:
-        windowPainter.SetWindow(hWnd, &game.board);
-        break;
-    case WM_SIZING:
-        windowPainter.SetWindow(hWnd, &game.board);
+        listViewPos = Point(game.board.boardInfo.rect.Width, 0);
+        windowPainter.SetWindow(hWnd, &game.board);     
+        SetWindowPos(
+            hWndListView,
+            NULL,
+            listViewPos.X, listViewPos.Y,
+            listViewWidth, game.board.boardInfo.rect.Height,
+            SWP_NOZORDER
+        );
+
         break;
     case WM_MOUSEMOVE:
         if (isDragging) {
-            if (ClipCursor(&game.board.boardInfo.tagRect)) {
-                windowPainter.xMousePos = LOWORD(lParam);
-                windowPainter.yMousePos = HIWORD(lParam);
+            windowPainter.xMousePos = LOWORD(lParam);
+            windowPainter.yMousePos = HIWORD(lParam);
 
-                InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
-            }           
+            InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
         }
         break;
     case WM_LBUTTONDOWN: 
@@ -301,7 +326,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 windowPainter.xMousePos = LOWORD(lParam);
                 windowPainter.yMousePos = HIWORD(lParam);
 
-                GetClipCursor(cursorClip);
                 isDragging = true;
                 isMemorized = false;
                 InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);

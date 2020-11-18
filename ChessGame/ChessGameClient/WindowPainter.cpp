@@ -135,10 +135,10 @@ void WindowPainter::DrawDangerHints(Board* board, int currentSide)
 
 void WindowPainter::DrawLoggerWindow(Rect rect)
 {
-	Pen hintPen(Color(50, 50, 50, 50), 1);
+	/*Pen hintPen(Color(50, 50, 50, 50), 1);
 	SolidBrush hintBrush(Color(50, 50, 50, 50));
 
-	this->currentGraphics->FillRectangle(&hintBrush, rect.X, rect.Y, rect.Width, rect.Height);
+	this->currentGraphics->FillRectangle(&hintBrush, rect.X, rect.Y, rect.Width, rect.Height);*/
 }
 
 void WindowPainter::CreateBuffer(HWND hwnd) {
