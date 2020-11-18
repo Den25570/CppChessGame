@@ -196,7 +196,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Сохранить маркер экземпляра в глобальной переменной
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPED | WS_SYSMENU,
+   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPED | WS_SYSMENU | WS_CLIPCHILDREN,
       CW_USEDEFAULT, 0, 882, 700, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
@@ -208,6 +208,23 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    UpdateWindow(hWnd);
 
    return TRUE;
+}
+
+void LogMove(std::wstring move, int moveNum, int side) {
+    if (side == 0) {
+        LVITEM lvI;
+        lvI.pszText = LPSTR_TEXTCALLBACK;
+        lvI.mask = LVIF_TEXT;
+        lvI.iSubItem = 0;
+        lvI.iItem = moveNum;
+        ListView_InsertItem(hWndListView, &lvI);
+    }
+
+    wchar_t buffer[256];
+    wsprintfW(buffer, L"%d", moveNum + 1);
+
+    ListView_SetItemText(hWndListView, moveNum, 0, buffer);
+    ListView_SetItemText(hWndListView, moveNum, side + 1, const_cast<LPWSTR>(move.c_str()));
 }
 
 std::wstring GetExePath() {
@@ -335,13 +352,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_LBUTTONUP:
         if (isDragging) {
             game.TryMove(Point(LOWORD(lParam), HIWORD(lParam)));
-            ClipCursor(cursorClip);
+            LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
             isDragging = false;
             isMemorized = false;
             InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
 
             if ((game.CurrentActiveSide == 1 && game.Player2 == AI) || (game.CurrentActiveSide == 0 && game.Player1 == AI)) {
                 game.AIMove();
+                LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
+            }
+            else {
+                // wait
             }
         }
         break;

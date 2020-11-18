@@ -3,6 +3,10 @@
 void Logger::AddMove(std::vector<std::vector<Figure*>>* map, std::vector<int> move)
 {
 	std::wstring sMove = L"";
+
+	sMove += wchar_t(move[0] + L'a');
+	sMove += wchar_t(move[1] + L'1');
+	sMove += wchar_t(L'-');
 	sMove += wchar_t(move[2] + L'a');
 	sMove += wchar_t(move[3] + L'1');
 

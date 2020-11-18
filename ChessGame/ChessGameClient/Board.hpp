@@ -37,6 +37,7 @@ public:
 	std::vector<std::vector<Figure*>> figures;
 	Figure* backUpFigures[8][8];
 	Figure* selectedFigure;
+	Point selectedCell;
 	std::vector<Point> figuresAttackingKing;
 
 	//figure sprites data
@@ -58,7 +59,5 @@ public:
 	std::vector<int> AIMove(int side);
 
 private:
-	Point selectedCell;
-
 	Point selectCell(Point pos);
 };

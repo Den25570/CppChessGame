@@ -4,7 +4,7 @@
 bool Board::TrySelectFigure(Point pos, int side)
 {
 	this->selectedFigure = nullptr;
-	selectedCell = selectCell(pos);
+	this->selectedCell = selectCell(pos);
 
 	this->selectedFigure = this->figures[selectedCell.X][selectedCell.Y];
 	if (this->selectedFigure && this->selectedFigure->side == side)

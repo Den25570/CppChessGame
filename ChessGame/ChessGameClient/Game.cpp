@@ -31,7 +31,7 @@ bool Game::TryMove(Point pos)
 	std::vector<int> move;
 	if (this->board.TryMove(pos, &move)) {
 
-		this->logger.AddMove(this->board.figures[move[0]][move[1]], move);
+		this->logger.AddMove(&(this->board.figures), std::vector<int> {this->board.selectedCell.X, this->board.selectedCell.Y, move[0], move[1]});
 
 		this->CurrentActiveSide = !this->CurrentActiveSide;
 		this->CurrentGameState = MoveState::WaitForMove;
