@@ -8,7 +8,11 @@
 #include "Game.hpp"
 #include <iostream>
 
+#include <CommCtrl.h>
+#pragma comment(lib, "ComCtl32.Lib")
+
 #define MAX_LOADSTRING 100
+#define IDC_LISTVIEW 1111
 
 // Глобальные переменные:
 HINSTANCE hInst;                                // текущий экземпляр
@@ -20,11 +24,70 @@ LPRECT cursorClip;
 bool isDragging = false;
 bool isMemorized = false;
 
+//Controls
+HWND hWndListView;
+
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
+HWND CreateListView(HWND hwndParent)
+{
+    INITCOMMONCONTROLSEX icex;           // Structure for control initialization.
+    icex.dwICC = ICC_LISTVIEW_CLASSES;
+    InitCommonControlsEx(&icex);
+
+    RECT rcClient;                       // The parent window's client area.
+
+    GetClientRect(hwndParent, &rcClient);
+
+    // Create the list-view window in report view with label editing enabled.
+    HWND hWndListView = CreateWindowEx(NULL,
+        WC_LISTVIEW,
+        L"",
+        WS_CHILD | LVS_REPORT | LVS_EDITLABELS,
+        800, 0,
+        rcClient.right - rcClient.left,
+        rcClient.bottom - rcClient.top,
+        hwndParent,
+        (HMENU)IDC_LISTVIEW,
+        GetModuleHandle(NULL),
+        NULL);
+
+    LVCOLUMN lvc;
+    lvc.mask = LVCF_WIDTH | LVCF_TEXT;
+    lvc.cx = 100;
+
+    lvc.pszText = const_cast<LPWSTR>(L"White");
+    ListView_InsertColumn(hWndListView, 0, &lvc);
+
+    lvc.pszText = const_cast<LPWSTR>(L"Black");
+    ListView_InsertColumn(hWndListView, 1, &lvc);
+
+    return (hWndListView);
+}
+
+// SetView: Sets a list-view's window style to change the view.
+// hWndListView: A handle to the list-view control. 
+// dwView:       A value specifying the new view style.
+//
+VOID SetView(HWND hWndListView, DWORD dwView)
+{
+    // Retrieve the current window style. 
+    DWORD dwStyle = GetWindowLong(hWndListView, GWL_STYLE);
+
+    // Set the window style only if the view bits changed.
+    if ((dwStyle & LVS_TYPEMASK) != dwView)
+    {
+        SetWindowLong(hWndListView,
+            GWL_STYLE,
+            (dwStyle & ~LVS_TYPEMASK) | dwView);
+    }               // Logical OR'ing of dwView with the result of 
+}                   // a bitwise AND between dwStyle and 
+                    // the Unary complenent of LVS_TYPEMASK.
+
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -147,6 +210,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_CREATE:
+        hWndListView = CreateListView(hWnd);
+        SetView(hWndListView, );
+        ShowWindow(hWndListView, SW_SHOWDEFAULT);
+
         //window init
         windowPainter.LoadSprites(&game.board);
         windowPainter.SetWindow(hWnd, &game.board);
@@ -190,6 +257,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             // draw
             if (!isMemorized) {
+                windowPainter.DrawLoggerWindow(Rect(game.board.boardImageInfo.width * game.board.boardInfo.boardSizeMult, 0, 300, game.board.boardImageInfo.height * game.board.boardInfo.boardSizeMult));
+
                 windowPainter.DrawField(&game.board);
                 windowPainter.DrawFigures(&game.board);
                 windowPainter.DrawDangerHints(&game.board, game.CurrentActiveSide);

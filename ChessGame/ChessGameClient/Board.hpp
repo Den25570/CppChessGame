@@ -50,12 +50,12 @@ public:
 	Image* sprite;
 
 	bool TrySelectFigure(Point pos, int side);
-	bool TryMove(Point pos);
+	bool TryMove(Point pos, std::vector<int>* move);
 	void InitGame();
 	void SetAllPossibleMoves(int side);
 	void GetFiguresAttackingKing(int side);
 
-	void AIMove(int side);
+	std::vector<int> AIMove(int side);
 
 private:
 	Point selectedCell;

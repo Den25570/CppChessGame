@@ -19,13 +19,16 @@ public:
 	HDC bufferDC;
 	HDC memoryDC;
 
+	//Field
 	void DrawField(Board* board);
 	void DrawFigures(Board* board);
 	void DrawSelectedFigure(Board* board);
 	void DrawHintMoves(Board* board);
 	void DrawDangerHints(Board* board, int currentSide);
-
 	void LoadSprites(Board* board);
+
+	//Logger
+	void DrawLoggerWindow(Rect rect);
 
 	void CreateBuffer(HWND hwnd);
 	void SetHDC(HDC hdc);

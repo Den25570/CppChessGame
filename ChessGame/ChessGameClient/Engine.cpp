@@ -240,7 +240,7 @@ sPoint getMaxValue(std::vector<std::vector<int>>* values)
 
 bool FilterUserMoves(std::vector<std::vector<Figure*>>* map, std::vector<std::vector<int>>* moves, int xPos, int yPos, int player)
 {
-	bool isKingBeatable = false;
+	bool noMovesRemain = true;
 	for (int xDst = 0; xDst < 8; xDst++) {
 		for (int yDst = 0; yDst < 8; yDst++) {
 			if ((*moves)[xDst][yDst] != -INT32_MAX) {
@@ -249,12 +249,14 @@ bool FilterUserMoves(std::vector<std::vector<Figure*>>* map, std::vector<std::ve
 				std::vector<int> moveRes = selectBestMove(&newMap, !player, 1, 1);
 				if (moveRes[4] >= beatScore[0] * 0.75) {
 					(*moves)[xDst][yDst] = -INT32_MAX;
-					isKingBeatable = true;
+				}
+				else {
+					noMovesRemain = false;
 				}
 			}
 		}
 	}
-	return isKingBeatable;
+	return noMovesRemain;
 }
 
 /*	std::vector<std::vector<Figure*>> new_map = {{nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr},

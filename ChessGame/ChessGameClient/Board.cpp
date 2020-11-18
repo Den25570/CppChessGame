@@ -14,7 +14,7 @@ bool Board::TrySelectFigure(Point pos, int side)
 	
 }
 
-bool Board::TryMove(Point pos)
+bool Board::TryMove(Point pos, std::vector<int>* move)
 {
 	Point destCell = selectCell(pos);
 	if (this->selectedFigure->possibleMovesMap[destCell.X][destCell.Y]) {
@@ -26,8 +26,10 @@ bool Board::TryMove(Point pos)
 		figures[destCell.X][destCell.Y] = this->selectedFigure;
 
 		this->selectedFigure->movedOnce = true;
-
 		this->selectedFigure = nullptr;
+
+		(*move).push_back(destCell.X);
+		(*move).push_back(destCell.Y);
 
 		return true;
 	}
@@ -66,11 +68,13 @@ void Board::InitGame() {
 void Board::SetAllPossibleMoves(int side)
 {
 	//process all possible moves
+	bool isMate = true;
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
 			if (this->figures[i][j] && this->figures[i][j]->side == side) {
 				std::vector<std::vector<int>> moves = getPossibleMoves(&(this->figures), i, j, 0, nullptr);
-				bool isKingUnderAttack = FilterUserMoves(&(this->figures), &moves, i, j, side);
+				bool noMovesRemain = FilterUserMoves(&(this->figures), &moves, i, j, side);
+				isMate &= noMovesRemain;
 				for (int x= 0; x < 8; x++) {
 					for (int y = 0; y < 8; y++) {
 						this->figures[i][j]->possibleMovesMap[x][y] = moves[x][y] != -INT32_MAX;
@@ -99,7 +103,7 @@ void Board::GetFiguresAttackingKing(int side)
 	}
 }
 
-void Board::AIMove(int side)
+std::vector<int> Board::AIMove(int side)
 {
 	std::vector<int> move = selectBestMove(&(this->figures), side, 1, 4);
 
@@ -110,6 +114,8 @@ void Board::AIMove(int side)
 	figures[move[2]][move[3]] = figures[move[0]][move[1]];
 	figures[move[0]][move[1]]->movedOnce = true;
 	figures[move[0]][move[1]] = nullptr;
+
+	return move;
 }
 
 Point Board::selectCell(Point pos)

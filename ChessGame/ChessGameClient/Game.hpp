@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Board.hpp"
+#include "Logger.hpp"
 
 enum MoveState {
 	WaitForMove,
@@ -23,6 +24,7 @@ public:
 	PlayerType Player2;
 
 	Board board;
+	Logger logger;
 
 	Game() {
 		this->CurrentGameState = MoveState::Initializing;
