@@ -148,6 +148,7 @@
     <ClInclude Include="Logger.hpp" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="ThreadPool.hpp" />
     <ClInclude Include="WindowPainter.hpp" />
   </ItemGroup>
   <ItemGroup>
