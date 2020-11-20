@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include <CommCtrl.h>
+
 #pragma comment(lib, "ComCtl32.Lib")
 
 #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")  
@@ -33,6 +34,7 @@ Point listViewPos;
 const int listViewWidth = 225;
 
 //Controls
+int idTimer = -1;
 HWND hWndListView;
 
 // Отправить объявления функций, включенных в этот модуль кода:
@@ -230,6 +232,12 @@ void LogMove(std::wstring move, int moveNum, int side) {
     ListView_SetItemText(hWndListView, moveNum, side + 1, const_cast<LPWSTR>(move.c_str()));
 }
 
+void AIMove(HWND hWnd) {
+    game.AIMove();
+    LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
+    InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
+}
+
 std::wstring GetExePath() {
     TCHAR buffer[MAX_PATH] = { 0 };
     GetModuleFileName(NULL, buffer, MAX_PATH);
@@ -315,6 +323,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
             }           
             windowPainter.DrawSelectedFigure(&game.board);
+            windowPainter.DrawCurrentMoveCell(&game.board);
 
             //finish
             BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left,
@@ -365,14 +374,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
 
             if ((game.CurrentActiveSide == 1 && game.Player2 == AI) || (game.CurrentActiveSide == 0 && game.Player1 == AI)) {
-                threadPool.AddJob(std::bind(&Game::AIMove, &game));
-
-                LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
+                threadPool.AddJob(std::bind(AIMove, hWnd));
             }
             else {
                 // wait
             }
-
         }
         break;
     case WM_DESTROY:

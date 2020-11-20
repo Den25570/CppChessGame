@@ -54,9 +54,7 @@ public:
 	void InitGame();
 	void SetAllPossibleMoves(int side);
 	void GetFiguresAttackingKing(int side);
+	Point selectCell(Point pos);
 
 	std::vector<int> AIMove(int side);
-
-private:
-	Point selectCell(Point pos);
 };
