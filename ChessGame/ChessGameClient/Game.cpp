@@ -30,7 +30,7 @@ bool Game::TryMove(Point pos)
 {
 	std::vector<int> move;
 	if (this->board.TryMove(pos, &move)) {
-
+		this->board.figuresAttackingKing.clear();
 		this->logger.AddMove(&(this->board.figures), std::vector<int> {this->board.selectedCell.X, this->board.selectedCell.Y, move[0], move[1]});
 
 		this->CurrentActiveSide = !this->CurrentActiveSide;
@@ -48,6 +48,7 @@ bool Game::TryMove(Point pos)
 
 void Game::AIMove()
 {
+	this->board.figuresAttackingKing.clear();
 	std::vector<int> move = this->board.AIMove(this->CurrentActiveSide);
 	this->logger.AddMove(&(this->board.figures), move);
 

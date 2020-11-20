@@ -116,7 +116,7 @@ void WindowPainter::DrawDangerHints(Board* board, int currentSide)
 		float width = board->boardImageInfo.cellWidth * board->boardInfo.boardSizeMult;
 		float height = board->boardImageInfo.cellHeight * board->boardInfo.boardSizeMult + 1;
 
-		Pen kDangerHintPen(Color(80, 240, 240, 0), width / 20);
+		Pen kDangerHintPen(Color(100, 255, 0, 0), width / 20);
 
 		bool kingFound = false;
 		for (int i = 0; i < 8 && !kingFound; i++) {
