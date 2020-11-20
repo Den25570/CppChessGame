@@ -7,7 +7,6 @@
 using namespace Gdiplus;
 #pragma comment (lib,"Gdiplus.lib")
 #include "Figure.hpp"
-#include "Engine.hpp"
 
 struct BoardImageInfo {
 	int width;

@@ -1,5 +1,6 @@
 #include "Board.hpp"
 #include <string>
+#include "Engine.hpp"
 
 bool Board::TrySelectFigure(Point pos, int side)
 {

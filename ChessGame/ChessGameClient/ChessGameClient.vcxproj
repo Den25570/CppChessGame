@@ -157,6 +157,7 @@
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="WindowPainter.cpp" />
   </ItemGroup>
   <ItemGroup>

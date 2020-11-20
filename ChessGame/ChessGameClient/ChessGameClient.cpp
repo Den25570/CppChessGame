@@ -6,11 +6,8 @@
 #include "WindowPainter.hpp"
 #include "Board.hpp"
 #include "Game.hpp"
+#include "ThreadPool.hpp"
 #include <iostream>
-#include <thread>
-#include <queue>
-#include <mutex>
-#include <functional>
 
 #include <CommCtrl.h>
 #pragma comment(lib, "ComCtl32.Lib")
@@ -20,72 +17,6 @@
 #define MAX_LOADSTRING 100
 #define IDC_LISTVIEW 1111
 
-int NumThreads;
-std::vector<std::thread> pool;
-std::mutex queueMutex;
-std::mutex poolMutex;
-std::queue<std::function<void()>> jobQueue;
-std::condition_variable condition;
-bool stopped;
-bool terminatePool;
-
-void infiniteLoop()
-{
-    while (true)
-    {
-        std::function<void()> Job;
-        {
-            std::unique_lock<std::mutex> lock(queueMutex);
-
-            condition.wait(lock, [] {return !jobQueue.empty() || terminatePool; });
-            if (terminatePool)
-                break;
-            Job = jobQueue.front();
-            jobQueue.pop();
-        }
-        Job();
-    }
-}
-
-void InitThreadPool()
-{
-    NumThreads = std::thread::hardware_concurrency();
-    stopped = false;
-    terminatePool = false;
-    for (int ii = 0; ii < NumThreads; ii++)
-    {
-        pool.push_back(std::thread(infiniteLoop));
-    }
-
-}
-
-void AddJob(std::function<void()> newJob)
-{
-    {
-        std::unique_lock<std::mutex> lock(queueMutex);
-        jobQueue.push(newJob);
-    }
-    condition.notify_one();
-}
-
-void Shutdown()
-{
-    {
-        std::unique_lock<std::mutex> lock(poolMutex);
-        terminatePool = true;
-    }
-
-    condition.notify_all();
-
-    for (std::thread& thread : pool)
-    {
-        thread.join();
-    }
-
-    pool.clear();
-    stopped = true;
-}
-
 
 // Глобальные переменные:
 HINSTANCE hInst;                                // текущий экземпляр
@@ -93,6 +24,7 @@ WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки за�
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
 WindowPainter windowPainter;                    // 
 Game game;
+ThreadPool threadPool;
 LPRECT cursorClip;
 bool isDragging = false;
 bool isMemorized = false;
@@ -320,7 +252,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
         //window init
-        InitThreadPool();
+        threadPool.InitThreadPool();
 
         windowPainter.LoadSprites(&game.board);
         windowPainter.SetWindow(hWnd, &game.board);
@@ -433,7 +365,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
 
             if ((game.CurrentActiveSide == 1 && game.Player2 == AI) || (game.CurrentActiveSide == 0 && game.Player1 == AI)) {
-                AddJob(std::bind(&Game::AIMove, &game));
+                threadPool.AddJob(std::bind(&Game::AIMove, &game));
 
                 LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
             }
@@ -444,7 +376,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_DESTROY:
-        Shutdown();
+        threadPool.Shutdown();
         PostQuitMessage(0);
         break;
     default:
