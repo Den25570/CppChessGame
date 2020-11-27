@@ -7,37 +7,37 @@ bool Board::TrySelectFigure(Point pos, int side)
 	this->selectedFigure = nullptr;
 	this->selectedCell = selectCell(pos);
 
-	this->selectedFigure = this->figures[selectedCell.X][selectedCell.Y];
-	if (this->selectedFigure && this->selectedFigure->side == side)
-		return true;
-	else
-		return false;
-	
+	if (!(this->selectedCell.X > 7 || this->selectedCell.X < 0 || this->selectedCell.Y > 7 || this->selectedCell.Y < 0)) {
+		this->selectedFigure = this->figures[selectedCell.X][selectedCell.Y];
+		if (this->selectedFigure && this->selectedFigure->side == side)
+			return true;
+	}
+	return false;	
 }
 
 bool Board::TryMove(Point pos, std::vector<int>* move)
 {
 	Point destCell = selectCell(pos);
-	if (this->selectedFigure->possibleMovesMap[destCell.X][destCell.Y]) {
-		//move
-		figures[selectedCell.X][selectedCell.Y] = nullptr;
-		if (figures[destCell.X][destCell.Y] != nullptr) {
-			delete(figures[destCell.X][destCell.Y]);
+	if (!(destCell.X > 7 || destCell.X < 0 || destCell.Y > 7 || destCell.Y < 0)) {
+		if (this->selectedFigure->possibleMovesMap[destCell.X][destCell.Y]) {
+			//move
+			figures[selectedCell.X][selectedCell.Y] = nullptr;
+			if (figures[destCell.X][destCell.Y] != nullptr) {
+				delete(figures[destCell.X][destCell.Y]);
+			}
+			figures[destCell.X][destCell.Y] = this->selectedFigure;
+
+			this->selectedFigure->movedOnce = true;
+			this->selectedFigure = nullptr;
+
+			(*move).push_back(destCell.X);
+			(*move).push_back(destCell.Y);
+
+			return true;
 		}
-		figures[destCell.X][destCell.Y] = this->selectedFigure;
-
-		this->selectedFigure->movedOnce = true;
-		this->selectedFigure = nullptr;
-
-		(*move).push_back(destCell.X);
-		(*move).push_back(destCell.Y);
-
-		return true;
 	}
-	else {
-		this->selectedFigure = nullptr;
-		return false;
-	}
+	this->selectedFigure = nullptr;
+	return false;
 }
 
 void Board::InitGame() {
@@ -128,5 +128,6 @@ Point Board::selectCell(Point pos)
 	int i = boardX / (this->boardImageInfo.cellWidth * this->boardInfo.boardSizeMult);
 	int j = boardY / (this->boardImageInfo.cellHeight * this->boardInfo.boardSizeMult);
 
-	return Point(i > 7 ? 7: i < 0 ? 0 : i, j > 7 ? 7 : j < 0 ? 0 : j);
+	return Point(i, j);
+	//return Point(i > 7 ? 7: i < 0 ? 0 : i, j > 7 ? 7 : j < 0 ? 0 : j);
 }

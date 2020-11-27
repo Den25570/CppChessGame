@@ -6,6 +6,7 @@
 enum MoveState {
 	WaitForMove,
 	MovingFigure,
+	InMenu,
 	Initializing,
 	Finishing
 };
@@ -27,7 +28,7 @@ public:
 	Logger logger;
 
 	Game() {
-		this->CurrentGameState = MoveState::Initializing;
+		this->CurrentGameState = MoveState::InMenu;
 
 		//ToDo: select in client
 		this->Player1 = PlayerType::User;

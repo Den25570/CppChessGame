@@ -10,13 +10,19 @@
 #include <iostream>
 
 #include <CommCtrl.h>
-
 #pragma comment(lib, "ComCtl32.Lib")
 
-#pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")  
+#include <uxtheme.h>
+#pragma comment(lib, "uxtheme.Lib")
+
+#pragma comment(linker,"\"/manifestdependency:type='win32' \
+name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
+processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #define MAX_LOADSTRING 100
 #define IDC_LISTVIEW 1111
+#define IDC_SURRENDERBUTTON 1112
+#define IDC_RESETBUTTON 1113
 
 
 // Глобальные переменные:
@@ -31,11 +37,15 @@ bool isDragging = false;
 bool isMemorized = false;
 
 Point listViewPos;
+Rect surrenerButtonPos;
+Rect resetButtonPos;
 const int listViewWidth = 225;
 
 //Controls
 int idTimer = -1;
 HWND hWndListView;
+HWND hwndSurrenderButton;
+HWND hwndResetMoveButton;
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -57,7 +67,7 @@ LRESULT CALLBACK ListViewProc(HWND hwnd,
         auto hpen = CreatePen(PS_SOLID, 1, RGB(200, 200, 200));
         auto oldpen = SelectObject(hdc, hpen);
         SelectObject(hdc, GetStockObject(NULL_BRUSH));
-        Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);//draw red frame
+        Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom + 80);
         SelectObject(hdc, oldpen);
         DeleteObject(oldpen);
         ReleaseDC(hwnd, hdc);
@@ -91,7 +101,7 @@ HWND CreateListView(HWND hwndParent, Point pos)
         WS_CHILD |  LVS_REPORT  | LVS_EX_TRANSPARENTBKGND | WS_VSCROLL,
         pos.X, pos.Y,
         listViewWidth,
-        rcClient.bottom - rcClient.top,
+        rcClient.bottom - rcClient.top + 80,
         hwndParent,
         (HMENU)IDC_LISTVIEW,
         GetModuleHandle(NULL),
@@ -113,6 +123,24 @@ HWND CreateListView(HWND hwndParent, Point pos)
     ListView_InsertColumn(hWndListView, 2, &lvc);
 
     return (hWndListView);
+}
+
+LRESULT CALLBACK MyStaticWndProc(HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam)
+{
+    if (Message == WM_PAINT)
+    {
+        RECT rc;
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        GetClientRect(hwnd, &rc);
+        SetBkMode(hdc, TRANSPARENT);
+        DrawText(hdc, L"f", _tcslen(L"f"), &rc, DT_CENTER | DT_VCENTER);
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+
+    //v2 StaticWndProc(hwnd, Message, wparam, lparam);
+    return DefSubclassProc(hwnd, Message, wparam, lparam);
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -202,7 +230,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // Сохранить маркер экземпляра в глобальной переменной
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPED | WS_SYSMENU | WS_CLIPCHILDREN,
-      CW_USEDEFAULT, 0, 882, 700, nullptr, nullptr, hInstance, nullptr);
+      CW_USEDEFAULT, 0, 882, 740, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -244,16 +272,33 @@ std::wstring GetExePath() {
     return std::wstring(buffer).substr(0, std::wstring(buffer).find_last_of(L"\\/"));
 }
 
-//
-//  ФУНКЦИЯ: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  ЦЕЛЬ: Обрабатывает сообщения в главном окне.
-//
-//  WM_COMMAND  - обработать меню приложения
-//  WM_PAINT    - Отрисовка главного окна
-//  WM_DESTROY  - отправить сообщение о выходе и вернуться
-//
-//
+void InitGameElements(HWND hWnd) {
+    listViewPos = Point(game.board.boardInfo.rect.Width, 0);
+    surrenerButtonPos = Rect(game.board.boardInfo.rect.Width - 120 * 2 - 5 - game.board.boardImageInfo.leftOffset * game.board.boardInfo.boardSizeMult, game.board.boardInfo.rect.Height, 120, 30);
+    resetButtonPos = Rect(game.board.boardInfo.rect.Width - 120 - game.board.boardImageInfo.leftOffset * game.board.boardInfo.boardSizeMult, game.board.boardInfo.rect.Height, 120, 30);
+
+    hWndListView = CreateListView(hWnd, listViewPos);
+    windowPainter.CreateButton(surrenerButtonPos, L"Surrender", true, IDC_SURRENDERBUTTON);
+    windowPainter.CreateButton(resetButtonPos, L"Reset Move", true, IDC_RESETBUTTON);
+}
+
+void InitMenuElements(HWND hWnd) {
+
+}
+
+void ShowGameElements(HWND hWnd) {
+    ShowWindow(hWndListView, SW_SHOWDEFAULT);
+
+    //game init
+    game.InitGame();
+}
+
+void ShowMenuElements(HWND hWnd) {
+    ShowWindow(hWndListView, SW_HIDE);
+    game.CurrentGameState = MoveState::InMenu;
+}
+
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -263,16 +308,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         threadPool.InitThreadPool();
 
         windowPainter.LoadSprites(&game.board);
-        windowPainter.SetWindow(hWnd, &game.board);
+        windowPainter.SetWindow(hWnd, &game.board, 40);
         windowPainter.CreateBuffer(hWnd);
 
-        listViewPos = Point(game.board.boardInfo.rect.Width, 0);
-        hWndListView = CreateListView(hWnd, listViewPos);
-        ShowWindow(hWndListView, SW_SHOWDEFAULT);
+        InitMenuElements(hWnd);
+        InitGameElements(hWnd);
 
-        //game init
-        game.InitGame();
+        ShowGameElements(hWnd);
 
+        break;
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -307,23 +351,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             windowPainter.SetHDC(windowPainter.bufferDC);
 
             // draw
-            if (!isMemorized) {
-                windowPainter.DrawLoggerWindow(Rect(game.board.boardImageInfo.width * game.board.boardInfo.boardSizeMult, 0, 300, game.board.boardImageInfo.height * game.board.boardInfo.boardSizeMult));
+            if (game.CurrentGameState == MoveState::InMenu) {
 
-                windowPainter.DrawField(&game.board);
-                windowPainter.DrawFigures(&game.board);
-                windowPainter.DrawDangerHints(&game.board, game.CurrentActiveSide);
+            }
+            else {
+                if (!isMemorized) {
+                    windowPainter.DrawLoggerWindow(Rect(game.board.boardImageInfo.width * game.board.boardInfo.boardSizeMult, 0, 300, game.board.boardImageInfo.height * game.board.boardInfo.boardSizeMult));
 
-                if (isDragging && !isMemorized) {
-                    windowPainter.DrawHintMoves(&game.board);
+                    windowPainter.DrawField(&game.board);
+                    windowPainter.DrawFigures(&game.board);
+                    windowPainter.DrawDangerHints(&game.board, game.CurrentActiveSide);
 
-                    BitBlt(windowPainter.memoryDC, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left,
-                        ps.rcPaint.bottom - ps.rcPaint.top, windowPainter.bufferDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
-                    isMemorized = true;
+                    if (isDragging && !isMemorized) {
+                        windowPainter.DrawHintMoves(&game.board);
+
+                        BitBlt(windowPainter.memoryDC, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left,
+                            ps.rcPaint.bottom - ps.rcPaint.top, windowPainter.bufferDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
+                        isMemorized = true;
+                    }
                 }
-            }           
-            windowPainter.DrawSelectedFigure(&game.board);
-            windowPainter.DrawCurrentMoveCell(&game.board);
+                windowPainter.DrawSelectedFigure(&game.board);
+                windowPainter.DrawCurrentMoveCell(&game.board);
+                windowPainter.DrawButtons();
+            }
+            
 
             //finish
             BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left,
@@ -333,7 +384,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_SIZE:
         listViewPos = Point(game.board.boardInfo.rect.Width, 0);
-        windowPainter.SetWindow(hWnd, &game.board);     
+        windowPainter.SetWindow(hWnd, &game.board, 40);     
         SetWindowPos(
             hWndListView,
             NULL,
@@ -344,47 +395,67 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         break;
     case WM_MOUSEMOVE:
-        if (isDragging) {
+        if (isDragging) {   
             windowPainter.xMousePos = LOWORD(lParam);
             windowPainter.yMousePos = HIWORD(lParam);
-
             InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
         }
         break;
     case WM_LBUTTONDOWN: 
-        if (!isDragging) {
-            if (game.TrySelectFigure(Point(LOWORD(lParam), HIWORD(lParam)))) {
-                windowPainter.xMousePos = LOWORD(lParam);
-                windowPainter.yMousePos = HIWORD(lParam);
-
+        windowPainter.xMousePos = LOWORD(lParam);
+        windowPainter.yMousePos = HIWORD(lParam);
+        if (!isDragging) {         
+            if (game.TrySelectFigure(Point(LOWORD(lParam), HIWORD(lParam)))) {             
                 isDragging = true;
                 isMemorized = false;
-                InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
+                
             }           
         }
+        InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
         break;
     case WM_LBUTTONUP:
+        windowPainter.xMousePos = 0;
+        windowPainter.yMousePos = 0;
+
         if (isDragging) {
             if (game.TryMove(Point(LOWORD(lParam), HIWORD(lParam)))) {
 
                 LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
             }
             isDragging = false;
-            isMemorized = false;
-            InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
+            isMemorized = false;           
 
             if ((game.CurrentActiveSide == 1 && game.Player2 == AI) || (game.CurrentActiveSide == 0 && game.Player1 == AI)) {
                 threadPool.AddJob(std::bind(AIMove, hWnd));
             }
             else {
                 // wait
-            }
+            }         
         }
+        InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
         break;
+    /*case WM_CTLCOLORBTN: {
+        RECT crect;
+        HBRUSH brush;
+        COLORREF background_color = RGB(255, 0, 0);
+        HDC hdc = (HDC)wParam;
+        HWND button_handle = (HWND)lParam;
+
+        GetClientRect(button_handle, &crect);
+        SetBkColor(hdc, background_color);
+        SetTextColor(hdc, RGB(0, 0, 0));
+        DrawText(hdc, L"BTN", _countof(L"BTN") - 1, &crect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+        brush = CreateSolidBrush(background_color);
+
+        return (HRESULT)brush;
+    }*/
+        
     case WM_DESTROY:
         threadPool.Shutdown();
         PostQuitMessage(0);
         break;
+   
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }

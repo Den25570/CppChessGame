@@ -10,6 +10,13 @@ using namespace Gdiplus;
 
 //Class to manage all draw functionality
 
+struct Button {
+	int id;
+	Rect rect;
+	std::wstring text;
+	bool isShown;
+};
+
 class WindowPainter {
 public:
 	RECT windowRect;
@@ -18,6 +25,11 @@ public:
 
 	HDC bufferDC;
 	HDC memoryDC;
+
+	std::vector<Button> buttons;
+	void CreateButton(Rect rect, std::wstring text, bool isShown, int id);
+	void ChangeButtonVisibility(int id);
+	void DrawButtons();
 
 	//Field
 	void DrawField(Board* board);
@@ -33,7 +45,7 @@ public:
 
 	void CreateBuffer(HWND hwnd);
 	void SetHDC(HDC hdc);
-	void SetWindow(HWND hwnd, Board* board);
+	void SetWindow(HWND hwnd, Board* board, INT bottomMargin);
 
 private:
 	HDC currentHDC;	

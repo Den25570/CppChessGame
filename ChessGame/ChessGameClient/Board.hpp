@@ -17,6 +17,8 @@ struct BoardImageInfo {
 	int rightOffest;
 	int cellWidth;
 	int cellHeight;
+
+	Color borderColor;
 };
 
 struct BoardInfo {

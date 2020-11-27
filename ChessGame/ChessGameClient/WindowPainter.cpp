@@ -28,18 +28,84 @@ void WindowPainter::LoadBoardSprite(Board* board, std::wstring path) {
 	//To DO: разные поля с разными характеристиками
 	board->sprite = Image::FromFile(path.c_str());
 
-	board->boardImageInfo.width = 800;
-	board->boardImageInfo.height = 800;
+	board->boardImageInfo.width = board->sprite->GetWidth();
+	board->boardImageInfo.height = board->sprite->GetHeight();
 	board->boardImageInfo.topOffset = 18;
 	board->boardImageInfo.leftOffset = 19;
 	board->boardImageInfo.bottomOffset = 21;
 	board->boardImageInfo.rightOffest = 20;
 	board->boardImageInfo.cellWidth = 95;
 	board->boardImageInfo.cellHeight = 95;
+
+	Bitmap tmpBitmap(path.c_str());
+	tmpBitmap.GetPixel(1, 1, &board->boardImageInfo.borderColor);
+}
+
+void WindowPainter::CreateButton(Rect rect, std::wstring text, bool isShown, int id)
+{
+	Button button;
+	button.id = id;
+	button.rect = rect;
+	button.text = text;
+	button.isShown = isShown;
+	buttons.push_back(button);
+}
+
+void WindowPainter::ChangeButtonVisibility(int id)
+{
+	for (int i = 0; i < buttons.size(); i++) {
+		if (buttons[i].id == id) {
+			buttons[i].isShown = !buttons[i].isShown;
+			break;
+		}
+	}
+	return;
+}
+
+void WindowPainter::DrawButtons()
+{
+	SolidBrush brush(Color(255, 208, 191, 163));
+	SolidBrush textSolidBrush(Color(255, 0, 0, 0));
+	Pen pen(Color(255, 0, 0, 0), 2);
+
+	SolidBrush pushedBrush(Color(255, 188, 171, 143));
+	SolidBrush pushedTextSolidBrush(Color(255, 0, 0, 0));
+	Pen pushedpen(Color(255, 0, 0, 0), 2);
+
+	FontFamily   fontFamily(L"Arial");
+	Font         font(&fontFamily, 10, FontStyleBold, UnitPoint);
+	StringFormat stringFormat;	
+	
+	stringFormat.SetAlignment(StringAlignmentCenter);
+	stringFormat.SetLineAlignment(StringAlignmentCenter);
+
+	for (int i = 0; i < buttons.size(); i++) {
+		if (!buttons[i].isShown) {
+			continue;
+		}
+
+		RectF rectF(buttons[i].rect.X, buttons[i].rect.Y, buttons[i].rect.Width, buttons[i].rect.Height);
+		if (buttons[i].rect.IntersectsWith(Rect(xMousePos, yMousePos, 1, 1))) {
+			this->currentGraphics->FillRectangle(&pushedBrush, buttons[i].rect);
+			this->currentGraphics->DrawRectangle(&pushedpen, Rect(buttons[i].rect.X + 1, buttons[i].rect.Y, buttons[i].rect.Width - 1, buttons[i].rect.Height));
+			this->currentGraphics->DrawString(buttons[i].text.c_str(), -1, &font, rectF, &stringFormat, &pushedTextSolidBrush);
+		}
+		else {
+			
+			this->currentGraphics->FillRectangle(&brush, buttons[i].rect);
+			this->currentGraphics->DrawRectangle(&pen, Rect(buttons[i].rect.X + 1, buttons[i].rect.Y, buttons[i].rect.Width - 1, buttons[i].rect.Height));
+			this->currentGraphics->DrawString(buttons[i].text.c_str(), -1, &font, rectF, &stringFormat, &textSolidBrush);
+		}
+
+	}
 }
 
 void WindowPainter::DrawField(Board* board) {
 	this->currentGraphics->DrawImage(board->sprite, board->boardInfo.rect);
+
+	Color brushColor(Color(board->boardImageInfo.borderColor.GetA(), board->boardImageInfo.borderColor.GetR(), board->boardImageInfo.borderColor.GetG(), board->boardImageInfo.borderColor.GetB()));
+	SolidBrush fieldBorderBrush(brushColor);
+	this->currentGraphics->FillRectangle(&fieldBorderBrush, 0, board->boardInfo.rect.Height, board->boardInfo.rect.Width, this->windowRect.bottom - this->windowRect.top);
 }
 
 void WindowPainter::DrawFigures(Board* board) {
@@ -97,16 +163,18 @@ void WindowPainter::DrawCurrentMoveCell(Board* board)
 {
 	if (board->selectedFigure) {
 		Point cellCoords = board->selectCell(Point(xMousePos, yMousePos));
-		if (board->selectedFigure->possibleMovesMap[cellCoords.X][cellCoords.Y]) {
-			float x = (board->boardImageInfo.topOffset + cellCoords.X * board->boardImageInfo.cellWidth) * board->boardInfo.boardSizeMult;
-			float y = (board->boardImageInfo.leftOffset + cellCoords.Y * board->boardImageInfo.cellHeight) * board->boardInfo.boardSizeMult;
-			float width = board->boardImageInfo.cellWidth * board->boardInfo.boardSizeMult;
-			float height = board->boardImageInfo.cellHeight * board->boardInfo.boardSizeMult + 1;
+		if (!(cellCoords.X > 7 || cellCoords.X < 0 || cellCoords.Y > 7 || cellCoords.Y < 0)) {
+			if (board->selectedFigure->possibleMovesMap[cellCoords.X][cellCoords.Y]) {
+				float x = (board->boardImageInfo.topOffset + cellCoords.X * board->boardImageInfo.cellWidth) * board->boardInfo.boardSizeMult;
+				float y = (board->boardImageInfo.leftOffset + cellCoords.Y * board->boardImageInfo.cellHeight) * board->boardInfo.boardSizeMult;
+				float width = board->boardImageInfo.cellWidth * board->boardInfo.boardSizeMult;
+				float height = board->boardImageInfo.cellHeight * board->boardInfo.boardSizeMult + 1;
 
-			Pen selectedCellHintPen(Color(100, 255, 255, 0), width / 20);
+				Pen selectedCellHintPen(Color(100, 255, 255, 0), width / 20);
 
-			this->currentGraphics->DrawRectangle(&selectedCellHintPen, x + 1, y - 1, width, height);
-		}		
+				this->currentGraphics->DrawRectangle(&selectedCellHintPen, x + 1, y - 1, width, height);
+			}
+		}	
 	}	
 }
 
@@ -178,10 +246,10 @@ void WindowPainter::SetHDC(HDC hdc) {
 	this->currentGraphics = Gdiplus::Graphics::FromHDC(hdc);
 }
 
-void WindowPainter::SetWindow(HWND hwnd, Board * board) {
+void WindowPainter::SetWindow(HWND hwnd, Board * board, INT bottomMargin) {
 	GetClientRect(hwnd, &this->windowRect);
 
-	board->boardInfo.rect.Height = this->windowRect.bottom - this->windowRect.top;
+	board->boardInfo.rect.Height = this->windowRect.bottom - this->windowRect.top - bottomMargin;
 	board->boardInfo.rect.Width = (board->boardImageInfo.width / (board->boardImageInfo.height * 1.0)) * board->boardInfo.rect.Height;
 	board->boardInfo.boardSizeMult = (1.0f * board->boardInfo.rect.Height) / (board->boardImageInfo.height);
 	board->boardInfo.rect.X = 0;
