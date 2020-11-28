@@ -23,7 +23,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #define IDC_LISTVIEW 1111
 #define IDC_SURRENDERBUTTON 1112
 #define IDC_RESETBUTTON 1113
-
+#define IDC_FIGUREINGOPANEL 1114
 
 // Глобальные переменные:
 HINSTANCE hInst;                                // текущий экземпляр
@@ -39,6 +39,7 @@ bool isMemorized = false;
 Point listViewPos;
 Rect surrenerButtonPos;
 Rect resetButtonPos;
+Rect figureInfoPanelRect;
 const int listViewWidth = 225;
 
 //Controls
@@ -46,6 +47,7 @@ int idTimer = -1;
 HWND hWndListView;
 HWND hwndSurrenderButton;
 HWND hwndResetMoveButton;
+Panel* killedFiguresPanel;
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -260,9 +262,15 @@ void LogMove(std::wstring move, int moveNum, int side) {
     ListView_SetItemText(hWndListView, moveNum, side + 1, const_cast<LPWSTR>(move.c_str()));
 }
 
+void LogKill(FigureType type, int side) {
+    killedFiguresPanel->texts[side] += game.logger.GetUnicodeFigureRepresentation(type, side);
+}
+
 void AIMove(HWND hWnd) {
     game.AIMove();
     LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
+    if (game.logger.extendedLog[game.logger.log.size() - 1].size() == 5)
+        LogKill((FigureType)game.logger.extendedLog[game.logger.log.size() - 1][4], (game.logger.log.size() - 1) % 2);
     InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
 }
 
@@ -276,10 +284,12 @@ void InitGameElements(HWND hWnd) {
     listViewPos = Point(game.board.boardInfo.rect.Width, 0);
     surrenerButtonPos = Rect(game.board.boardInfo.rect.Width - 120 * 2 - 5 - game.board.boardImageInfo.leftOffset * game.board.boardInfo.boardSizeMult, game.board.boardInfo.rect.Height, 120, 30);
     resetButtonPos = Rect(game.board.boardInfo.rect.Width - 120 - game.board.boardImageInfo.leftOffset * game.board.boardInfo.boardSizeMult, game.board.boardInfo.rect.Height, 120, 30);
+    figureInfoPanelRect = Rect(game.board.boardImageInfo.leftOffset * game.board.boardInfo.boardSizeMult, game.board.boardInfo.rect.Height, 360, 36);
 
     hWndListView = CreateListView(hWnd, listViewPos);
     windowPainter.CreateButton(surrenerButtonPos, L"Surrender", true, IDC_SURRENDERBUTTON);
     windowPainter.CreateButton(resetButtonPos, L"Reset Move", true, IDC_RESETBUTTON);
+    killedFiguresPanel= windowPainter.CreatePanel(figureInfoPanelRect, std::vector<std::wstring>{L"", L""}, true, IDC_FIGUREINGOPANEL);
 }
 
 void InitMenuElements(HWND hWnd) {
@@ -372,7 +382,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 windowPainter.DrawSelectedFigure(&game.board);
                 windowPainter.DrawCurrentMoveCell(&game.board);
-                windowPainter.DrawButtons();
+                windowPainter.DrawControls();
             }
             
 
@@ -421,6 +431,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (game.TryMove(Point(LOWORD(lParam), HIWORD(lParam)))) {
 
                 LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
+                if (game.logger.extendedLog[game.logger.log.size() - 1].size() == 5)
+                    LogKill((FigureType)game.logger.extendedLog[game.logger.log.size() - 1][4], (game.logger.log.size() - 1) % 2);
             }
             isDragging = false;
             isMemorized = false;           
@@ -433,24 +445,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }         
         }
         InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
-        break;
-    /*case WM_CTLCOLORBTN: {
-        RECT crect;
-        HBRUSH brush;
-        COLORREF background_color = RGB(255, 0, 0);
-        HDC hdc = (HDC)wParam;
-        HWND button_handle = (HWND)lParam;
-
-        GetClientRect(button_handle, &crect);
-        SetBkColor(hdc, background_color);
-        SetTextColor(hdc, RGB(0, 0, 0));
-        DrawText(hdc, L"BTN", _countof(L"BTN") - 1, &crect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-        brush = CreateSolidBrush(background_color);
-
-        return (HRESULT)brush;
-    }*/
-        
+        break;      
     case WM_DESTROY:
         threadPool.Shutdown();
         PostQuitMessage(0);

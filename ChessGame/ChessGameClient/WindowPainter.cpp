@@ -41,7 +41,7 @@ void WindowPainter::LoadBoardSprite(Board* board, std::wstring path) {
 	tmpBitmap.GetPixel(1, 1, &board->boardImageInfo.borderColor);
 }
 
-void WindowPainter::CreateButton(Rect rect, std::wstring text, bool isShown, int id)
+Button* WindowPainter::CreateButton(Rect rect, std::wstring text, bool isShown, int id)
 {
 	Button button;
 	button.id = id;
@@ -49,6 +49,18 @@ void WindowPainter::CreateButton(Rect rect, std::wstring text, bool isShown, int
 	button.text = text;
 	button.isShown = isShown;
 	buttons.push_back(button);
+	return &buttons[buttons.size() - 1];
+}
+
+Panel* WindowPainter::CreatePanel(Rect rect, std::vector<std::wstring> texts, bool isShown, int id)
+{
+	Panel panel;
+	panel.id = id;
+	panel.rect = rect;
+	panel.texts = texts;
+	panel.isShown = isShown;
+	panels.push_back(panel);
+	return &panels[panels.size() - 1];
 }
 
 void WindowPainter::ChangeButtonVisibility(int id)
@@ -60,6 +72,23 @@ void WindowPainter::ChangeButtonVisibility(int id)
 		}
 	}
 	return;
+}
+
+void WindowPainter::ChangePanelVisibility(int id)
+{
+	for (int i = 0; i < panels.size(); i++) {
+		if (panels[i].id == id) {
+			panels[i].isShown = !panels[i].isShown;
+			break;
+		}
+	}
+	return;
+}
+
+void WindowPainter::DrawControls()
+{
+	this->DrawButtons();
+	this->DrawPanels();
 }
 
 void WindowPainter::DrawButtons()
@@ -97,6 +126,38 @@ void WindowPainter::DrawButtons()
 			this->currentGraphics->DrawString(buttons[i].text.c_str(), -1, &font, rectF, &stringFormat, &textSolidBrush);
 		}
 
+	}
+}
+
+void WindowPainter::DrawPanels()
+{
+	SolidBrush brush(Color(255, 208, 191, 163));
+	SolidBrush textSolidBrush(Color(255, 0, 0, 0));
+	Pen pen(Color(255, 0, 0, 0), 2);
+	FontFamily   fontFamily(L"Arial");
+	Font         font(&fontFamily, 8, FontStyleBold, UnitPoint);
+	StringFormat stringFormat;
+
+	for (int i = 0; i < panels.size(); i++) {
+		if (!panels[i].isShown) {
+			continue;
+		}
+		if (panels[i].texts.size() == 1) {
+			stringFormat.SetAlignment(StringAlignmentCenter);
+			stringFormat.SetLineAlignment(StringAlignmentCenter);
+		}
+		else {
+			stringFormat.SetAlignment(StringAlignmentNear);
+			stringFormat.SetLineAlignment(StringAlignmentNear);
+		}		
+		
+		this->currentGraphics->FillRectangle(&brush, panels[i].rect);
+		this->currentGraphics->DrawRectangle(&pen, Rect(panels[i].rect.X + 1, panels[i].rect.Y, panels[i].rect.Width - 1, panels[i].rect.Height));
+		for (int j = 0; j < panels[i].texts.size(); j++) {
+			RectF rectF(panels[i].rect.X, panels[i].rect.Y + panels[i].rect.Height * j, panels[i].rect.Width, panels[i].rect.Height / panels[i].texts.size());
+			this->currentGraphics->DrawString(panels[i].texts[j].c_str(), -1, &font, rectF, &stringFormat, &textSolidBrush);
+		}
+		
 	}
 }
 

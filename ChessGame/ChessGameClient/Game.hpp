@@ -18,13 +18,14 @@ enum PlayerType {
 
 class Game {
 public:
+	//Game info
 	MoveState CurrentGameState;
 	int CurrentActiveSide;
-
 	PlayerType Player1;
 	PlayerType Player2;
-
 	Board board;
+
+	//utils
 	Logger logger;
 
 	Game() {
@@ -38,6 +39,8 @@ public:
 	}
 
 	void InitGame();
+	void FinishGame();
+
 	bool TrySelectFigure(Point pos);
 	bool TryMove(Point pos);
 	void AIMove();

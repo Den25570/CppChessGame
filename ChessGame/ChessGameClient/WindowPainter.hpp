@@ -17,6 +17,13 @@ struct Button {
 	bool isShown;
 };
 
+struct Panel {
+	int id;
+	Rect rect;
+	std::vector<std::wstring> texts;
+	bool isShown;
+};
+
 class WindowPainter {
 public:
 	RECT windowRect;
@@ -26,10 +33,15 @@ public:
 	HDC bufferDC;
 	HDC memoryDC;
 
+	std::vector<Panel> panels;
 	std::vector<Button> buttons;
-	void CreateButton(Rect rect, std::wstring text, bool isShown, int id);
+	Button* CreateButton(Rect rect, std::wstring text, bool isShown, int id);
+	Panel* CreatePanel(Rect rect, std::vector<std::wstring> texts, bool isShown, int id);
 	void ChangeButtonVisibility(int id);
+	void ChangePanelVisibility(int id);
+	void DrawControls();
 	void DrawButtons();
+	void DrawPanels();
 
 	//Field
 	void DrawField(Board* board);

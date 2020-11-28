@@ -6,7 +6,8 @@
 class Logger {
 public:
 	std::vector<std::wstring> log;
+	std::vector<std::vector<int>> extendedLog;
 
+	wchar_t GetUnicodeFigureRepresentation(FigureType figureType, int side);
 	void AddMove(std::vector<std::vector<Figure*>>* map, std::vector<int> move);
-	void AddMove(Figure* selectedFigure, std::vector<int> move);
 };
