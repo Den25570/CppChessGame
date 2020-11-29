@@ -21,48 +21,67 @@ struct Panel {
 	int id;
 	Rect rect;
 	std::vector<std::wstring> texts;
+	std::vector<Color> textsColor;
 	bool isShown;
+	bool dark;
 };
 
 class WindowPainter {
 public:
+	//window info
 	RECT windowRect;
 	int xMousePos;
 	int yMousePos;
+	int clickedXMousePos;
+	int clickedYMousePos;
 
+	//Memory buffers
 	HDC bufferDC;
 	HDC memoryDC;
 
+	//board
+	Board* board;
+
+	//controls
 	std::vector<Panel> panels;
 	std::vector<Button> buttons;
+	Rect* intersectedRect;
+	Rect deadWhiteFiguresRect;
+	Rect deadBlackFiguresRect;
+
 	Button* CreateButton(Rect rect, std::wstring text, bool isShown, int id);
-	Panel* CreatePanel(Rect rect, std::vector<std::wstring> texts, bool isShown, int id);
+	Panel* CreatePanel(Rect rect, std::vector<std::wstring> texts, std::vector<Color> textsColor, bool isShown, int id, bool dark);
 	void ChangeButtonVisibility(int id);
 	void ChangePanelVisibility(int id);
 	void DrawControls();
 	void DrawButtons();
 	void DrawPanels();
+	bool NeedInvalidation();
 
 	//Field
-	void DrawField(Board* board);
-	void DrawFigures(Board* board);
-	void DrawSelectedFigure(Board* board);
-	void DrawHintMoves(Board* board);
-	void DrawCurrentMoveCell(Board* board);
-	void DrawDangerHints(Board* board, int currentSide);
-	void LoadSprites(Board* board);
+	void DrawField();
+	void DrawFigures();
+	void DrawSelectedFigure();
+	void DrawHintMoves();
+	void DrawCurrentMoveCell();
+	void DrawDeadFigures();
+	void DrawDangerHints(int currentSide);
+	void LoadSprites();
+
+	//board
+	void SetBoard(Board* board);
 
 	//Logger
 	void DrawLoggerWindow(Rect rect);
 
 	void CreateBuffer(HWND hwnd);
 	void SetHDC(HDC hdc);
-	void SetWindow(HWND hwnd, Board* board, INT bottomMargin);
+	void SetWindow(HWND hwnd, INT bottomMargin, INT topMargin);
 
 private:
 	HDC currentHDC;	
 	Graphics* currentGraphics;
 
-	void LoadBoardSprite(Board* board, std::wstring path);
-	void LoadFigureSprites(Board* board, std::wstring folderPath);
+	void LoadBoardSprite(std::wstring path);
+	void LoadFigureSprites(std::wstring folderPath);
 };

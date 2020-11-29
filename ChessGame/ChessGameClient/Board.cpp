@@ -3,8 +3,7 @@
 #include "Engine.hpp"
 
 bool Board::TrySelectFigure(Point pos, int side)
-{
-	this->selectedFigure = nullptr;
+{	
 	this->selectedCell = selectCell(pos);
 
 	if (!(this->selectedCell.X > 7 || this->selectedCell.X < 0 || this->selectedCell.Y > 7 || this->selectedCell.Y < 0)) {
@@ -12,6 +11,7 @@ bool Board::TrySelectFigure(Point pos, int side)
 		if (this->selectedFigure && this->selectedFigure->side == side)
 			return true;
 	}
+	this->selectedFigure = nullptr;
 	return false;	
 }
 
@@ -20,18 +20,21 @@ bool Board::TryMove(Point pos, std::vector<int>* move)
 	Point destCell = selectCell(pos);
 	if (!(destCell.X > 7 || destCell.X < 0 || destCell.Y > 7 || destCell.Y < 0)) {
 		if (this->selectedFigure->possibleMovesMap[destCell.X][destCell.Y]) {
+
+			(*move).push_back(destCell.X);
+			(*move).push_back(destCell.Y);
+
 			//move
 			figures[selectedCell.X][selectedCell.Y] = nullptr;
 			if (figures[destCell.X][destCell.Y] != nullptr) {
-				delete(figures[destCell.X][destCell.Y]);
+				(*move).push_back(figures[destCell.X][destCell.Y]->type);
+				deadFigures.push_back(figures[destCell.X][destCell.Y]);
 			}
 			figures[destCell.X][destCell.Y] = this->selectedFigure;
 
 			this->selectedFigure->movedOnce = true;
 			this->selectedFigure = nullptr;
 
-			(*move).push_back(destCell.X);
-			(*move).push_back(destCell.Y);
 
 			return true;
 		}
@@ -51,6 +54,8 @@ void Board::InitGame() {
 		{new Figure(Pawn, 0) ,new Figure(Pawn, 0),new Figure(Pawn, 0),new Figure(Pawn, 0),new Figure(Pawn, 0),new Figure(Pawn, 0),new Figure(Pawn, 0),new Figure(Pawn, 0)},
 		{new Figure(Rook, 0) ,new Figure(Knight, 0),new Figure(Bishop, 0),new Figure(Queen, 0),new Figure(King, 0),new Figure(Bishop, 0),new Figure(Knight, 0),new Figure(Rook, 0)}
 	};
+
+	deadFigures.clear();
 
 	for (int i = 0; i < 8; i++) {
 		this->figures.resize(8);
@@ -107,10 +112,13 @@ void Board::GetFiguresAttackingKing(int side)
 std::vector<int> Board::AIMove(int side)
 {
 	std::vector<int> move = selectBestMove(&(this->figures), side, 1, 4);
+	move.pop_back();
 
 	//move
 	if (figures[move[2]][move[3]] != nullptr) {
-		delete(figures[move[2]][move[3]]);
+		move.push_back(figures[move[2]][move[3]]->type);
+		deadFigures.push_back(figures[move[2]][move[3]]);
+		figures[move[2]][move[3]] = nullptr;
 	}
 	figures[move[2]][move[3]] = figures[move[0]][move[1]];
 	figures[move[0]][move[1]]->movedOnce = true;

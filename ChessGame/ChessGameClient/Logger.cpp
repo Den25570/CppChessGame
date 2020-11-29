@@ -30,10 +30,12 @@ void Logger::AddMove(std::vector<std::vector<Figure*>>* map, std::vector<int> mo
 	sMove += wchar_t(move[2] + L'a');
 	sMove += wchar_t(move[3] + L'1');
 
-	if ((*map)[move[2]][move[3]]) {
-		sMove += this->GetUnicodeFigureRepresentation((*map)[move[2]][move[3]]->type, (*map)[move[2]][move[3]]->side);
-		iMove.push_back((*map)[move[2]][move[3]]->type);
-	}	
+	sMove += this->GetUnicodeFigureRepresentation((*map)[move[2]][move[3]]->type, (*map)[move[2]][move[3]]->side);
+
+	if (move.size() == 5) {
+		sMove += L'x';
+		sMove += this->GetUnicodeFigureRepresentation((FigureType)move[4], !(*map)[move[2]][move[3]]->side);
+	}
 		
 	this->log.push_back(sMove);
 	this->extendedLog.push_back(iMove);

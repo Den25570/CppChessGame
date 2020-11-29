@@ -36,6 +36,7 @@ class Board {
 public:
 	//actual board
 	std::vector<std::vector<Figure*>> figures;
+	std::vector<Figure*> deadFigures;
 	Figure* backUpFigures[8][8];
 	Figure* selectedFigure;
 	Point selectedCell;
@@ -50,6 +51,8 @@ public:
 	BoardImageInfo boardImageInfo;
 	BoardInfo boardInfo;
 	Image* sprite;
+	Color darkBoardColor;
+	Color lightBoardColor;
 
 	bool TrySelectFigure(Point pos, int side);
 	bool TryMove(Point pos, std::vector<int>* move);
