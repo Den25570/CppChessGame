@@ -238,7 +238,7 @@ void WindowPainter::DrawField() {
 }
 
 void WindowPainter::DrawFigures() {
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < board->figures.size(); i++) {
 		for (int j = 0; j < 8; j++) {
 			if (board->figures[i][j] != nullptr && board->figures[i][j] != board->selectedFigure) {
 				float x, y;

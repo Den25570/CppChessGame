@@ -430,6 +430,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 windowPainter.DrawField();
                 windowPainter.DrawMenu();
                 windowPainter.DrawButtons();
+                windowPainter.DrawFigures();
+                windowPainter.DrawDangerHints(game.CurrentActiveSide);
             }
             else {
                 if (!isMemorized) {
