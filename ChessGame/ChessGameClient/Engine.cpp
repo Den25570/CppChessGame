@@ -1,7 +1,9 @@
 #include "Engine.hpp"
+#include <time.h>
 
 std::vector<int> selectBestMove(std::vector<std::vector<Figure*>>* map, int player, int depth, int maxDepth)
 {
+	srand(static_cast<unsigned int>(time(0)));
 	sPoint bestFigureToMove; bestFigureToMove.X = 0; bestFigureToMove.Y = 0;
 	sPoint bestMove; bestMove.X = 0; bestMove.Y = 0;
 	int bestMoveScore = -INT32_MAX;
@@ -13,16 +15,16 @@ std::vector<int> selectBestMove(std::vector<std::vector<Figure*>>* map, int play
 				int bestScore = -INT32_MAX;
 				std::vector<std::vector<int>> moves = getPossibleMoves(map, xPos, yPos, player, &bestScore);
 				for (int xDst = 0; xDst < 8; xDst++) {
-					for (int yDst = 0; yDst < 8; yDst++) {
-						int moveScore = moves[xDst][yDst];
-						if (moveScore != -INT32_MAX) {
-
+					for (int yDst = 0; yDst < 8; yDst++) {						
+						if (moves[xDst][yDst] != -INT32_MAX) {
+							moves[xDst][yDst] += (rand() % randomFactor * 2) - randomFactor;
+							int moveScore = moves[xDst][yDst];
 							int depthScore = 0;
 							if (depth < (moves[xDst][yDst] < bestScore ? maxDepth - 1 : maxDepth)) {
 								//find best enemy move
 								std::vector<std::vector<Figure*>> newMap = *map;
 								simulateMove(&newMap, xPos, yPos, xDst, yDst);
-								std::vector<int> moveRes = selectBestMove(&newMap, !player, depth + 1, moves[xDst][yDst] < bestScore ? maxDepth - 1 : maxDepth);
+								std::vector<int> moveRes = selectBestMove(&newMap, !player, depth + 1, moveScore < bestScore ? maxDepth - 1 : maxDepth);
 								depthScore = moveRes[4];
 							}
 							

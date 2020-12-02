@@ -12,6 +12,8 @@ const int beatScore[6] = {
 	20000, 900, 330, 320, 500, 100
 };
 
+const int randomFactor = 4;
+
 const int pawnMoveScore[8][8] = {
 	250,  250,  250,  250,  250,  250,  250,  250,
 	50, 50, 50, 50, 50, 50, 50, 50,
