@@ -1,5 +1,16 @@
 #include "Game.hpp"
 
+Game::Game()
+{
+	this->CurrentGameState = MoveState::InMenu;
+
+	//ToDo: select in client
+	this->Player1 = PlayerType::User;
+	this->Player2 = PlayerType::AI;
+
+	this->CurrentActiveSide = 0;
+}
+
 void Game::InitGame()
 {
 	CurrentGameState = MoveState::Initializing;
@@ -16,6 +27,24 @@ void Game::InitGame()
 
 	CurrentActiveSide = 0;
 	CurrentGameState = MoveState::WaitForMove;
+}
+
+void Game::ResetMove(bool updateMaps)
+{
+	std::vector<int> move = this->logger.ResetMove();
+	this->board.figures[move[0]][move[1]] = this->board.figures[move[2]][move[3]];
+	this->board.figures[move[0]][move[1]]->totalMoves--;
+	if (move.size() == 5) {
+		this->board.figures[move[2]][move[3]] = this->board.deadFigures[this->board.deadFigures.size() - 1];
+		this->board.deadFigures.pop_back();
+	}
+	else {
+		this->board.figures[move[2]][move[3]] = nullptr;
+	}
+	if (updateMaps) {
+		this->board.SetAllPossibleMoves(this->CurrentActiveSide);
+		this->board.GetFiguresAttackingKing(this->CurrentActiveSide);
+	}
 }
 
 bool Game::TrySelectFigure(Point pos)
@@ -39,14 +68,7 @@ bool Game::TryMove(Point pos)
 			this->logger.AddMove(&(this->board.figures), std::vector<int> {this->board.selectedCell.X, this->board.selectedCell.Y, move[0], move[1], move[2]});
 		}
 		
-
-		this->CurrentActiveSide = !this->CurrentActiveSide;
-		this->CurrentGameState = MoveState::WaitForMove;
-
-		if (this->CurrentActiveSide == PlayerType::User) {
-			this->board.SetAllPossibleMoves(this->CurrentActiveSide);
-			this->board.GetFiguresAttackingKing(this->CurrentActiveSide);
-		}		
+		PassMoveToNextPlayer();
 
 		return true;
 	}
@@ -59,13 +81,15 @@ void Game::AIMove()
 	std::vector<int> move = this->board.AIMove(this->CurrentActiveSide);
 	this->logger.AddMove(&(this->board.figures), move);
 
+	PassMoveToNextPlayer();
+}
+
+void Game::PassMoveToNextPlayer()
+{
 	this->CurrentActiveSide = !this->CurrentActiveSide;
 	this->CurrentGameState = MoveState::WaitForMove;
 
-	if (this->CurrentActiveSide == PlayerType::User) {
-		this->board.SetAllPossibleMoves(this->CurrentActiveSide);
-		this->board.GetFiguresAttackingKing(this->CurrentActiveSide);
-	}
-		
+	this->board.SetAllPossibleMoves(this->CurrentActiveSide);
+	this->board.GetFiguresAttackingKing(this->CurrentActiveSide);
 }
 

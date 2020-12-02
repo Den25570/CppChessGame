@@ -10,4 +10,5 @@ public:
 
 	wchar_t GetUnicodeFigureRepresentation(FigureType figureType, int side);
 	void AddMove(std::vector<std::vector<Figure*>>* map, std::vector<int> move);
+	std::vector<int> ResetMove();
 };

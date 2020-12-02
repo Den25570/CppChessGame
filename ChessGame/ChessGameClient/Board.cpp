@@ -32,7 +32,7 @@ bool Board::TryMove(Point pos, std::vector<int>* move)
 			}
 			figures[destCell.X][destCell.Y] = this->selectedFigure;
 
-			this->selectedFigure->movedOnce = true;
+			this->selectedFigure->totalMoves++;
 			this->selectedFigure = nullptr;
 
 
@@ -121,7 +121,7 @@ std::vector<int> Board::AIMove(int side)
 		figures[move[2]][move[3]] = nullptr;
 	}
 	figures[move[2]][move[3]] = figures[move[0]][move[1]];
-	figures[move[0]][move[1]]->movedOnce = true;
+	figures[move[0]][move[1]]->totalMoves++;
 	figures[move[0]][move[1]] = nullptr;
 
 	return move;

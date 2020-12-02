@@ -356,6 +356,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             case IDM_EXIT:
                 DestroyWindow(hWnd);
                 break;
+            case IDC_RESETBUTTON:
+                if ((game.Player1 != game.Player2) && ((game.CurrentActiveSide == 1 && game.Player2 == User) || (game.CurrentActiveSide == 0 && game.Player1 == User))) {
+                    game.ResetMove(false);
+                    game.ResetMove(true);
+                }
+                else if (game.Player1 == game.Player2) {
+                    game.ResetMove(true);
+                }
+                break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
             }
@@ -466,6 +475,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             else {
                 // wait
             }         
+        }
+        else {
+            SendMessage(hWnd, WM_COMMAND, windowPainter.ClickButton(), 0);
         }
         InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
         break;      

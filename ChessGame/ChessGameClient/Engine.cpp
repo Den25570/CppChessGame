@@ -65,7 +65,7 @@ std::vector<std::vector<int>> getPossibleMoves(std::vector<std::vector<Figure*>>
 	switch (figure->type) {
 	case FigureType::Pawn:
 
-		for (int i = 1; i <= 1 + !figure->movedOnce; i++) {
+		for (int i = 1; i <= 1 + !(figure->totalMoves > 0); i++) {
 			X = xPos; Y = yPos + (figure->side ? 1 : -1) * i;
 			if (validateCoords(X, Y) && ((*map)[X][Y] == nullptr)) {
 				result[X][Y] = evaluateCurrentMove(map, xPos, yPos, X, Y, player);

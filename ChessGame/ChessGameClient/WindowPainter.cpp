@@ -183,6 +183,19 @@ void WindowPainter::DrawPanels()
 	}
 }
 
+int WindowPainter::ClickButton()
+{
+	for (int i = 0; i < buttons.size(); i++) {
+		if (!buttons[i].isShown) {
+			continue;
+		}
+		else if (intersectedRect == &buttons[i].rect) {
+			return buttons[i].id;
+		}
+	}
+	return 0;
+}
+
 bool WindowPainter::NeedInvalidation()
 {
 	for (int i = 0; i < buttons.size(); i++) {

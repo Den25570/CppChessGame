@@ -28,22 +28,15 @@ public:
 	//utils
 	Logger logger;
 
-	Game() {
-		this->CurrentGameState = MoveState::InMenu;
-
-		//ToDo: select in client
-		this->Player1 = PlayerType::User;
-		this->Player2 = PlayerType::AI;
-
-		this->CurrentActiveSide = 0;
-	}
+	Game();
 
 	void InitGame();
 	void FinishGame();
+	void ResetMove(bool updateMaps);
 
 	bool TrySelectFigure(Point pos);
 	bool TryMove(Point pos);
 	void AIMove();
 private:
-
+	void PassMoveToNextPlayer();
 };
