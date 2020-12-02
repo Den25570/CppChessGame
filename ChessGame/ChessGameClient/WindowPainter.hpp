@@ -56,6 +56,7 @@ public:
 	void DrawControls();
 	void DrawButtons();
 	void DrawPanels();
+	void DrawMenu();
 	int ClickButton();
 	bool NeedInvalidation();
 

@@ -183,6 +183,19 @@ void WindowPainter::DrawPanels()
 	}
 }
 
+void WindowPainter::DrawMenu()
+{
+	SolidBrush brush(this->board->darkBoardColor); 
+	Pen pen(this->board->lightBoardColor, 2);
+
+	Rect menuRect(this->board->boardInfo.rect.X + this->board->boardInfo.rect.Width,
+		this->windowRect.top,
+		this->windowRect.right - this->windowRect.left - (this->board->boardInfo.rect.X + this->board->boardInfo.rect.Width),
+		this->windowRect.bottom - this->windowRect.top);
+	this->currentGraphics->FillRectangle(&brush, menuRect);
+	this->currentGraphics->DrawRectangle(&pen, menuRect);
+}
+
 int WindowPainter::ClickButton()
 {
 	for (int i = 0; i < buttons.size(); i++) {
@@ -215,10 +228,13 @@ bool WindowPainter::NeedInvalidation()
 }
 
 void WindowPainter::DrawField() {
-
+	SolidBrush whiteBrush(Color(255,255,255,255));
 	SolidBrush fieldBorderBrush(board->darkBoardColor);
-	this->currentGraphics->FillRectangle(&fieldBorderBrush, 0, 0, board->boardInfo.rect.Width, this->windowRect.bottom - this->windowRect.top);
+	Pen pen(this->board->lightBoardColor, 2);
+	this->currentGraphics->FillRectangle(&whiteBrush, 0, 0, this->windowRect.right - this->windowRect.left, this->windowRect.bottom - this->windowRect.top);
+	this->currentGraphics->FillRectangle(&fieldBorderBrush, 0, 0, board->boardInfo.rect.Width, this->windowRect.bottom - this->windowRect.top);	
 	this->currentGraphics->DrawImage(board->sprite, board->boardInfo.rect);
+//	this->currentGraphics->DrawRectangle(&pen, 1, 1, board->boardInfo.rect.Width - 1, this->windowRect.bottom - this->windowRect.top - 1);
 }
 
 void WindowPainter::DrawFigures() {

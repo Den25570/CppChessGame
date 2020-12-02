@@ -43,8 +43,10 @@ void Logger::AddMove(std::vector<std::vector<Figure*>>* map, std::vector<int> mo
 
 std::vector<int> Logger::ResetMove()
 {
-	std::vector<int> move = this->extendedLog[this->extendedLog.size() - 1];
-	this->extendedLog.pop_back();
-	this->log.pop_back();
-	return move;
+	if (!this->extendedLog.empty()) {
+		std::vector<int> move = this->extendedLog[this->extendedLog.size() - 1];
+		this->extendedLog.pop_back();
+		this->log.pop_back();
+		return move;
+	}
 }

@@ -4,20 +4,15 @@ Game::Game()
 {
 	this->CurrentGameState = MoveState::InMenu;
 
-	//ToDo: select in client
-	this->Player1 = PlayerType::User;
-	this->Player2 = PlayerType::AI;
-
 	this->CurrentActiveSide = 0;
 }
 
-void Game::InitGame()
+void Game::InitGame(PlayerType Player1, PlayerType Player2)
 {
 	CurrentGameState = MoveState::Initializing;
 
-	//ToDo: select in client
-	PlayerType Player1 = PlayerType::User;
-	PlayerType Player2 = PlayerType::AI;	
+	this->Player1 = Player1;
+	this->Player2 = Player2;
 
 	this->board.InitGame();
 	if (Player1 == PlayerType::User)
@@ -32,27 +27,34 @@ void Game::InitGame()
 void Game::ResetMove(bool updateMaps)
 {
 	std::vector<int> move = this->logger.ResetMove();
-	this->board.figures[move[0]][move[1]] = this->board.figures[move[2]][move[3]];
-	this->board.figures[move[0]][move[1]]->totalMoves--;
-	if (move.size() == 5) {
-		this->board.figures[move[2]][move[3]] = this->board.deadFigures[this->board.deadFigures.size() - 1];
-		this->board.deadFigures.pop_back();
+	if (!move.empty()) {
+		this->board.figures[move[0]][move[1]] = this->board.figures[move[2]][move[3]];
+		this->board.figures[move[0]][move[1]]->totalMoves--;
+		if (move.size() == 5) {
+			this->board.figures[move[2]][move[3]] = this->board.deadFigures[this->board.deadFigures.size() - 1];
+			this->board.deadFigures.pop_back();
+		}
+		else {
+			this->board.figures[move[2]][move[3]] = nullptr;
+		}
+
+		this->CurrentActiveSide = !this->CurrentActiveSide;
+		this->CurrentGameState = MoveState::WaitForMove;
+		if (updateMaps) {
+			this->board.SetAllPossibleMoves(this->CurrentActiveSide);
+			this->board.GetFiguresAttackingKing(this->CurrentActiveSide);
+		}
 	}
-	else {
-		this->board.figures[move[2]][move[3]] = nullptr;
-	}
-	if (updateMaps) {
-		this->board.SetAllPossibleMoves(this->CurrentActiveSide);
-		this->board.GetFiguresAttackingKing(this->CurrentActiveSide);
-	}
+
 }
 
 bool Game::TrySelectFigure(Point pos)
 {
-	if ((this->CurrentActiveSide == 0 && this->Player1 == PlayerType::User) || (this->CurrentActiveSide == 1 && this->Player2 == PlayerType::User))
-		return this->board.TrySelectFigure(pos, this->CurrentActiveSide);
-	else
-		return false;
+	if (this->CurrentGameState != InMenu) {
+		if ((this->CurrentActiveSide == 0 && this->Player1 == PlayerType::User) || (this->CurrentActiveSide == 1 && this->Player2 == PlayerType::User))
+			return this->board.TrySelectFigure(pos, this->CurrentActiveSide);
+	}	
+	return false;
 }
 
 bool Game::TryMove(Point pos)

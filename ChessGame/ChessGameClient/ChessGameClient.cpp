@@ -27,6 +27,10 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #define IDC_FIGUREINGOPANEL2 1115
 #define IDC_MOVEGOPANEL 1116
 
+#define IDC_PVPBUTTON 1117
+#define IDC_PVEBUTTON 1118
+#define IDC_QUITBUTTON 1119
+
 // Глобальные переменные:
 HINSTANCE hInst;                                // текущий экземпляр
 WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
@@ -44,10 +48,15 @@ Rect resetButtonPos;
 Rect figureInfoPanelRect1;
 Rect figureInfoPanelRect2;
 Rect moveInfoPanelRect;
+
+Rect pvpButtonRect;
+Rect pveButtonRect;
+Rect quitButtonRect;
 const int listViewWidth = 225;
 
 //Controls
 int idTimer = -1;
+HWND mainWnd;
 HWND hWndListView;
 HWND hwndSurrenderButton;
 HWND hwndResetMoveButton;
@@ -59,6 +68,7 @@ Panel* moveInfoPanel;
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 void ChangePlayerMoveText();
+void ChangeControlsVisibility();
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
@@ -76,7 +86,7 @@ LRESULT CALLBACK ListViewProc(HWND hwnd,
         auto hpen = CreatePen(PS_SOLID, 1, RGB(200, 200, 200));
         auto oldpen = SelectObject(hdc, hpen);
         SelectObject(hdc, GetStockObject(NULL_BRUSH));
-        Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom + 80);
+        Rectangle(hdc, rc.left, rc.top, rc.right, windowPainter.windowRect.bottom - windowPainter.windowRect.top + 100);
         SelectObject(hdc, oldpen);
         DeleteObject(oldpen);
         ReleaseDC(hwnd, hdc);
@@ -107,10 +117,10 @@ HWND CreateListView(HWND hwndParent, Point pos)
     HWND hWndListView = CreateWindowEx(NULL,
         WC_LISTVIEW,
         L"",
-        WS_CHILD |  LVS_REPORT  | LVS_EX_TRANSPARENTBKGND | WS_VSCROLL,
+        WS_CHILD |  LVS_REPORT   | WS_VSCROLL,
         pos.X, pos.Y,
         listViewWidth,
-        rcClient.bottom - rcClient.top + 80,
+        windowPainter.windowRect.bottom - windowPainter.windowRect.top,
         hwndParent,
         (HMENU)IDC_LISTVIEW,
         GetModuleHandle(NULL),
@@ -160,7 +170,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: Разместите код здесь.
     // Start up GDI+.
     GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;
@@ -196,13 +205,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     return (int) msg.wParam;
 }
 
-
-
-//
-//  ФУНКЦИЯ: MyRegisterClass()
-//
-//  ЦЕЛЬ: Регистрирует класс окна.
-//
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex;
@@ -224,16 +226,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
-//
-//   ФУНКЦИЯ: InitInstance(HINSTANCE, int)
-//
-//   ЦЕЛЬ: Сохраняет маркер экземпляра и создает главное окно
-//
-//   КОММЕНТАРИИ:
-//
-//        В этой функции маркер экземпляра сохраняется в глобальной переменной, а также
-//        создается и выводится главное окно программы.
-//
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Сохранить маркер экземпляра в глобальной переменной
@@ -269,6 +261,14 @@ void LogMove(std::wstring move, int moveNum, int side) {
     ListView_SetItemText(hWndListView, moveNum, side + 1, const_cast<LPWSTR>(move.c_str()));
 }
 
+void UnLogMove(int moveNum, int side) {
+    if (side == 0) {
+        ListView_DeleteItem(hWndListView, moveNum);
+    }
+    ListView_SetItemText(hWndListView, moveNum, 0, const_cast<LPWSTR>(L""));
+    ListView_SetItemText(hWndListView, moveNum, side + 1, const_cast<LPWSTR>(L""));
+}
+
 void AIMove(HWND hWnd) {
     game.AIMove();
     LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);   
@@ -295,34 +295,54 @@ void InitGameElements(HWND hWnd) {
     windowPainter.CreateButton(resetButtonPos, L"Reset Move", true, IDC_RESETBUTTON);
     killedFiguresPanel1 = windowPainter.CreatePanel(figureInfoPanelRect1, {}, {}, true, IDC_FIGUREINGOPANEL1, false);
     killedFiguresPanel2 = windowPainter.CreatePanel(figureInfoPanelRect2, {}, {}, true, IDC_FIGUREINGOPANEL2, false);
-    moveInfoPanel = windowPainter.CreatePanel(moveInfoPanelRect, {L"WHITE"}, { Color(255, 255,255,255)}, true, IDC_MOVEGOPANEL, true);
+   // moveInfoPanel = windowPainter.CreatePanel(moveInfoPanelRect, {L"WHITE"}, { Color(255, 255,255,255)}, true, IDC_MOVEGOPANEL, true);
 
     windowPainter.deadWhiteFiguresRect = figureInfoPanelRect1;
     windowPainter.deadBlackFiguresRect = figureInfoPanelRect2;
 }
 
-void InitMenuElements(HWND hWnd) {
+void ChangeControlsVisibility()
+{
+    ListView_DeleteAllItems(hWndListView);
+    windowPainter.ChangeButtonVisibility(IDC_SURRENDERBUTTON);
+    windowPainter.ChangeButtonVisibility(IDC_RESETBUTTON);
+    windowPainter.ChangePanelVisibility(IDC_FIGUREINGOPANEL1);
+    windowPainter.ChangePanelVisibility(IDC_FIGUREINGOPANEL2);
+    windowPainter.ChangePanelVisibility(IDC_MOVEGOPANEL);
+    windowPainter.ChangeButtonVisibility(IDC_PVPBUTTON);
+    windowPainter.ChangeButtonVisibility(IDC_PVEBUTTON);
+    windowPainter.ChangeButtonVisibility(IDC_QUITBUTTON);
+}
 
+void InitMenuElements(HWND hWnd) {
+    pvpButtonRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 170 / 2,
+        game.board.boardInfo.rect.Y + game.board.boardImageInfo.topOffset * game.board.boardInfo.boardSizeMult, 170, 40);
+    pveButtonRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 170 / 2,
+        game.board.boardInfo.rect.Y + game.board.boardImageInfo.topOffset * game.board.boardInfo.boardSizeMult + 50, 170, 40);
+    quitButtonRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 170 / 2,
+        game.board.boardInfo.rect.Y + game.board.boardImageInfo.topOffset * game.board.boardInfo.boardSizeMult + 100, 170, 40);
+
+    windowPainter.CreateButton(pvpButtonRect, L"Player vs Player", false, IDC_PVPBUTTON);
+    windowPainter.CreateButton(pveButtonRect, L"Player vs AI", false, IDC_PVEBUTTON);
+    windowPainter.CreateButton(quitButtonRect, L"Quit", false, IDC_QUITBUTTON);
 }
 
 void ShowGameElements(HWND hWnd) {
+    ChangeControlsVisibility();
     ShowWindow(hWndListView, SW_SHOWDEFAULT);
-
-    //game init
-    game.InitGame();
 }
 
 void ShowMenuElements(HWND hWnd) {
+    ChangeControlsVisibility();
     ShowWindow(hWndListView, SW_HIDE);
-    game.CurrentGameState = MoveState::InMenu;
 }
 
 
 void ChangePlayerMoveText()
 {
-    moveInfoPanel->texts[0] = !game.CurrentActiveSide ? L"WHITE" : L"BLACK";
-    moveInfoPanel->textsColor[0] = !game.CurrentActiveSide ? Color(255, 255, 255, 255) : Color(255, 0, 0, 0);
-    moveInfoPanel->dark = !game.CurrentActiveSide;
+   // moveInfoPanel->texts[0] = !game.CurrentActiveSide ? L"WHITE" : L"BLACK";
+   // moveInfoPanel->textsColor[0] = !game.CurrentActiveSide ? Color(255, 255, 255, 255) : Color(255, 0, 0, 0);
+   // moveInfoPanel->dark = !game.CurrentActiveSide;
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -341,7 +361,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         InitMenuElements(hWnd);
         InitGameElements(hWnd);
 
-        ShowGameElements(hWnd);
+        ShowMenuElements(hWnd);
 
         break;
     case WM_COMMAND:
@@ -358,12 +378,31 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             case IDC_RESETBUTTON:
                 if ((game.Player1 != game.Player2) && ((game.CurrentActiveSide == 1 && game.Player2 == User) || (game.CurrentActiveSide == 0 && game.Player1 == User))) {
+                    UnLogMove((game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
                     game.ResetMove(false);
+                    UnLogMove((game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
                     game.ResetMove(true);
                 }
                 else if (game.Player1 == game.Player2) {
+                    UnLogMove((game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
                     game.ResetMove(true);
                 }
+                break;
+                
+            case IDC_SURRENDERBUTTON:
+                ShowMenuElements(hWnd);
+                game.CurrentGameState = MoveState::InMenu;
+                break;
+            case IDC_PVPBUTTON:
+                ShowGameElements(hWnd);
+                game.InitGame(PlayerType::User, PlayerType::User);
+                break;
+            case IDC_PVEBUTTON:
+                ShowGameElements(hWnd);
+                game.InitGame(PlayerType::User, PlayerType::AI);
+                break;
+            case IDC_QUITBUTTON:
+                SendMessage(hWnd, WM_DESTROY, 0, 0);
                 break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
@@ -387,18 +426,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             windowPainter.SetHDC(windowPainter.bufferDC);
 
             // draw
-            if (game.CurrentGameState == MoveState::InMenu) {
-
+            if (game.CurrentGameState == MoveState::InMenu) {              
+                windowPainter.DrawField();
+                windowPainter.DrawMenu();
+                windowPainter.DrawButtons();
             }
             else {
                 if (!isMemorized) {
-                    
-                    windowPainter.DrawLoggerWindow(Rect(game.board.boardImageInfo.width * game.board.boardInfo.boardSizeMult, 0, 300, game.board.boardImageInfo.height * game.board.boardInfo.boardSizeMult));
                     windowPainter.DrawField();
                     windowPainter.DrawPanels();
-                    windowPainter.DrawDeadFigures();
-
-                    
+                    windowPainter.DrawDeadFigures();                
                     windowPainter.DrawFigures();
                     windowPainter.DrawDangerHints(game.CurrentActiveSide);
 

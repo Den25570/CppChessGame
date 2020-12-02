@@ -30,7 +30,7 @@ public:
 
 	Game();
 
-	void InitGame();
+	void InitGame(PlayerType Player1, PlayerType Player2);
 	void FinishGame();
 	void ResetMove(bool updateMaps);
 
