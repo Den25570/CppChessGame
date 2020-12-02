@@ -24,6 +24,7 @@ public:
 	PlayerType Player1;
 	PlayerType Player2;
 	Board board;
+	bool isMate;
 
 	//utils
 	Logger logger;

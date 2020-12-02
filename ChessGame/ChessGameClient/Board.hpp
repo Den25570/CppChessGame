@@ -41,6 +41,7 @@ public:
 	Figure* selectedFigure;
 	Point selectedCell;
 	std::vector<Point> figuresAttackingKing;
+	bool isMate;
 
 	//figure sprites data
 	Bitmap* figureSprites;

@@ -43,15 +43,17 @@ bool isDragging = false;
 bool isMemorized = false;
 
 Point listViewPos;
+
 Rect surrenerButtonPos;
 Rect resetButtonPos;
 Rect figureInfoPanelRect1;
 Rect figureInfoPanelRect2;
 Rect moveInfoPanelRect;
-
 Rect pvpButtonRect;
 Rect pveButtonRect;
 Rect quitButtonRect;
+Rect gameResultRect;
+
 const int listViewWidth = 225;
 
 //Controls
@@ -63,6 +65,7 @@ HWND hwndResetMoveButton;
 Panel* killedFiguresPanel1;
 Panel* killedFiguresPanel2;
 Panel* moveInfoPanel;
+Panel* gameResultPanel;
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -269,8 +272,26 @@ void UnLogMove(int moveNum, int side) {
     ListView_SetItemText(hWndListView, moveNum, side + 1, const_cast<LPWSTR>(L""));
 }
 
+
+void ShowGameElements(HWND hWnd) {
+    ChangeControlsVisibility();
+    ShowWindow(hWndListView, SW_SHOWDEFAULT);
+}
+
+void ShowMenuElements(HWND hWnd) {
+    ChangeControlsVisibility();
+    ShowWindow(hWndListView, SW_HIDE);
+}
+
+
 void AIMove(HWND hWnd) {
     game.AIMove();
+    if (game.isMate) {
+        ShowMenuElements(hWnd);
+        game.CurrentGameState = MoveState::InMenu;
+        return;
+    }
+
     LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);   
     ChangePlayerMoveText();
     InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
@@ -289,6 +310,7 @@ void InitGameElements(HWND hWnd) {
     figureInfoPanelRect1 = Rect(game.board.boardImageInfo.leftOffset * game.board.boardInfo.boardSizeMult - 5, game.board.boardInfo.rect.Height + 40, 360, 36);
     figureInfoPanelRect2 = Rect(game.board.boardImageInfo.leftOffset * game.board.boardInfo.boardSizeMult - 5, 5, 360, 36);
     moveInfoPanelRect = Rect(game.board.boardInfo.rect.Width - 120 * 2 - 5 - game.board.boardImageInfo.leftOffset * game.board.boardInfo.boardSizeMult, 5, 250, 36);
+    gameResultRect = Rect(game.board.boardInfo.rect.X +  game.board.boardInfo.rect.Width / 2 - 170 / 2, game.board.boardInfo.rect.Y + game.board.boardInfo.rect.Height / 2 - 40 / 2, 170, 40);
 
     hWndListView = CreateListView(hWnd, listViewPos);
     windowPainter.CreateButton(surrenerButtonPos, L"Surrender", true, IDC_SURRENDERBUTTON);
@@ -326,17 +348,6 @@ void InitMenuElements(HWND hWnd) {
     windowPainter.CreateButton(pveButtonRect, L"Player vs AI", false, IDC_PVEBUTTON);
     windowPainter.CreateButton(quitButtonRect, L"Quit", false, IDC_QUITBUTTON);
 }
-
-void ShowGameElements(HWND hWnd) {
-    ChangeControlsVisibility();
-    ShowWindow(hWndListView, SW_SHOWDEFAULT);
-}
-
-void ShowMenuElements(HWND hWnd) {
-    ChangeControlsVisibility();
-    ShowWindow(hWndListView, SW_HIDE);
-}
-
 
 void ChangePlayerMoveText()
 {
@@ -502,6 +513,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         windowPainter.clickedYMousePos = 0;
         if (isDragging) {
             if (game.TryMove(Point(LOWORD(lParam), HIWORD(lParam)))) {
+                if (game.isMate) {
+                    ShowMenuElements(hWnd);
+                    game.CurrentGameState = MoveState::InMenu;
+                    break;
+                }
                 LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
                 ChangePlayerMoveText();
             }

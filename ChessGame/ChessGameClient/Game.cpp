@@ -3,13 +3,13 @@
 Game::Game()
 {
 	this->CurrentGameState = MoveState::InMenu;
-
+	this->isMate = false;
 	this->CurrentActiveSide = 0;
 }
 
 void Game::InitGame(PlayerType Player1, PlayerType Player2)
 {
-	CurrentGameState = MoveState::Initializing;
+	this->CurrentGameState = MoveState::Initializing;
 
 	this->Player1 = Player1;
 	this->Player2 = Player2;
@@ -20,8 +20,9 @@ void Game::InitGame(PlayerType Player1, PlayerType Player2)
 	if (Player2 == PlayerType::User)
 		this->board.SetAllPossibleMoves(1);
 
-	CurrentActiveSide = 0;
-	CurrentGameState = MoveState::WaitForMove;
+	this->CurrentActiveSide = 0;
+	this->isMate = false;
+	this->CurrentGameState = MoveState::WaitForMove;
 }
 
 void Game::ResetMove(bool updateMaps)
@@ -90,8 +91,8 @@ void Game::PassMoveToNextPlayer()
 {
 	this->CurrentActiveSide = !this->CurrentActiveSide;
 	this->CurrentGameState = MoveState::WaitForMove;
-
 	this->board.SetAllPossibleMoves(this->CurrentActiveSide);
 	this->board.GetFiguresAttackingKing(this->CurrentActiveSide);
+	this->isMate = this->board.isMate;
 }
 

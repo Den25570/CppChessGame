@@ -74,7 +74,7 @@ void Board::InitGame() {
 void Board::SetAllPossibleMoves(int side)
 {
 	//process all possible moves
-	bool isMate = true;
+	isMate = true;
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
 			if (this->figures[i][j] && this->figures[i][j]->side == side) {
