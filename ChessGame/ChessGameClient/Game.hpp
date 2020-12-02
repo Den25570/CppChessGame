@@ -36,8 +36,8 @@ public:
 	void ResetMove(bool updateMaps);
 
 	bool TrySelectFigure(Point pos);
-	bool TryMove(Point pos);
-	void AIMove();
+	MoveType TryMove(Point pos);
+	MoveType AIMove();
 private:
 	void PassMoveToNextPlayer();
 };

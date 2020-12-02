@@ -246,7 +246,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    return TRUE;
 }
 
-void LogMove(std::wstring move, int moveNum, int side) {
+void LogMove(MoveType moveType, std::wstring move, int moveNum, int side) {
     if (side == 0) {
         LVITEM lvI;
         lvI.pszText = LPSTR_TEXTCALLBACK;
@@ -284,14 +284,14 @@ void ShowMenuElements(HWND hWnd) {
 
 
 void AIMove(HWND hWnd) {
-    game.AIMove();
+    MoveType moveType = game.AIMove();
     if (game.isMate) {
         ShowMenuElements(hWnd);
         game.CurrentGameState = MoveState::InMenu;
         return;
     }
 
-    LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);   
+    LogMove(moveType, game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
     ChangePlayerMoveText();
     InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
 }
@@ -336,11 +336,11 @@ void ChangeControlsVisibility()
 }
 
 void InitMenuElements(HWND hWnd) {
-    pvpButtonRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 170 / 2,
+    pvpButtonRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 170 / 2 - 10,
         game.board.boardInfo.rect.Y + game.board.boardImageInfo.topOffset * game.board.boardInfo.boardSizeMult, 170, 40);
-    pveButtonRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 170 / 2,
+    pveButtonRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 170 / 2 - 10,
         game.board.boardInfo.rect.Y + game.board.boardImageInfo.topOffset * game.board.boardInfo.boardSizeMult + 50, 170, 40);
-    quitButtonRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 170 / 2,
+    quitButtonRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 170 / 2 - 10,
         game.board.boardInfo.rect.Y + game.board.boardImageInfo.topOffset * game.board.boardInfo.boardSizeMult + 100, 170, 40);
 
     windowPainter.CreateButton(pvpButtonRect, L"Player vs Player", false, IDC_PVPBUTTON);
@@ -505,13 +505,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         windowPainter.clickedXMousePos = 0;
         windowPainter.clickedYMousePos = 0;
         if (isDragging) {
-            if (game.TryMove(Point(LOWORD(lParam), HIWORD(lParam)))) {
+            MoveType moveType = game.TryMove(Point(LOWORD(lParam), HIWORD(lParam)));
+            if (moveType != MoveType::None) {
                 if (game.isMate) {
                     ShowMenuElements(hWnd);
                     game.CurrentGameState = MoveState::InMenu;
                     break;
                 }
-                LogMove(game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
+                LogMove(moveType, game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
                 ChangePlayerMoveText();
             }
             isDragging = false;

@@ -19,22 +19,30 @@ wchar_t Logger::GetUnicodeFigureRepresentation(FigureType figureType, int side)
 	};
 }
 
-void Logger::AddMove(std::vector<std::vector<Figure*>>* map, std::vector<int> move)
+void Logger::AddMove(MoveType moveType, std::vector<std::vector<Figure*>>* map, std::vector<int> move)
 {
 	std::wstring sMove = L""; 
 	std::vector<int> iMove = move;
 
-	sMove += wchar_t(move[0] + L'a');
-	sMove += wchar_t(move[1] + L'1');
-	sMove += wchar_t(L'-');
-	sMove += wchar_t(move[2] + L'a');
-	sMove += wchar_t(move[3] + L'1');
+	if (moveType == MoveType::Default) {
+		sMove += wchar_t(move[0] + L'a');
+		sMove += wchar_t(move[1] + L'1');
+		sMove += wchar_t(L'-');
+		sMove += wchar_t(move[2] + L'a');
+		sMove += wchar_t(move[3] + L'1');
 
-	sMove += this->GetUnicodeFigureRepresentation((*map)[move[2]][move[3]]->type, (*map)[move[2]][move[3]]->side);
+		sMove += this->GetUnicodeFigureRepresentation((*map)[move[2]][move[3]]->type, (*map)[move[2]][move[3]]->side);
 
-	if (move.size() == 5) {
-		sMove += L'x';
-		sMove += this->GetUnicodeFigureRepresentation((FigureType)move[4], !(*map)[move[2]][move[3]]->side);
+		if (move.size() == 5) {
+			sMove += L'x';
+			sMove += this->GetUnicodeFigureRepresentation((FigureType)move[4], !(*map)[move[2]][move[3]]->side);
+		}
+	}
+	else if (moveType == MoveType::LongCastling) {
+		sMove += std::wstring(L"O-O-O");
+	}
+	else if (moveType == MoveType::ShortCastling) {
+		sMove += std::wstring(L"O-O");
 	}
 		
 	this->log.push_back(sMove);

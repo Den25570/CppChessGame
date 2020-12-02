@@ -15,11 +15,28 @@ bool Board::TrySelectFigure(Point pos, int side)
 	return false;	
 }
 
-bool Board::TryMove(Point pos, std::vector<int>* move)
+MoveType Board::TryMove(Point pos, std::vector<int>* move)
 {
+	MoveType moveType = MoveType::None;
 	Point destCell = selectCell(pos);
 	if (!(destCell.X > 7 || destCell.X < 0 || destCell.Y > 7 || destCell.Y < 0)) {
-		if (this->selectedFigure->possibleMovesMap[destCell.X][destCell.Y]) {
+		if (this->selectedFigure && this->selectedFigure->possibleMovesMap[destCell.X][destCell.Y]) {			
+			moveType = MoveType::Default;
+
+			//Castling
+			if (figures[selectedCell.X][selectedCell.Y]->type == King && figures[selectedCell.X][selectedCell.Y]->totalMoves == 0) {
+				if ((destCell.X == selectedCell.X + 2)) {
+					figures[selectedCell.X + 1][selectedCell.Y] = figures[selectedCell.X + 3][selectedCell.Y];
+					figures[selectedCell.X + 3][selectedCell.Y] = nullptr;
+					moveType = MoveType::ShortCastling;
+				}
+				else if (destCell.X == selectedCell.X - 2) {
+					figures[selectedCell.X - 2][selectedCell.Y] = figures[selectedCell.X - 4][selectedCell.Y];
+					figures[selectedCell.X - 4][selectedCell.Y] = nullptr;
+					moveType = MoveType::LongCastling;
+					destCell.X -= 1;
+				}
+			}
 
 			(*move).push_back(destCell.X);
 			(*move).push_back(destCell.Y);
@@ -33,14 +50,10 @@ bool Board::TryMove(Point pos, std::vector<int>* move)
 			figures[destCell.X][destCell.Y] = this->selectedFigure;
 
 			this->selectedFigure->totalMoves++;
-			this->selectedFigure = nullptr;
-
-
-			return true;
 		}
 	}
 	this->selectedFigure = nullptr;
-	return false;
+	return moveType;
 }
 
 void Board::InitGame() {
@@ -109,22 +122,42 @@ void Board::GetFiguresAttackingKing(int side)
 	}
 }
 
-std::vector<int> Board::AIMove(int side)
+MoveType Board::AIMove(int side, std::vector<int> *move)
 {
-	std::vector<int> move = selectBestMove(&(this->figures), side, 1, 4);
-	move.pop_back();
+	MoveType moveType = MoveType::None;
+
+	(*move) = selectBestMove(&(this->figures), side, 1, 4);
+	(*move).pop_back();
 
 	//move
-	if (figures[move[2]][move[3]] != nullptr) {
-		move.push_back(figures[move[2]][move[3]]->type);
-		deadFigures.push_back(figures[move[2]][move[3]]);
-		figures[move[2]][move[3]] = nullptr;
-	}
-	figures[move[2]][move[3]] = figures[move[0]][move[1]];
-	figures[move[0]][move[1]]->totalMoves++;
-	figures[move[0]][move[1]] = nullptr;
+	moveType = MoveType::Default;
 
-	return move;
+	//Castling
+	if (figures[(*move)[0]][(*move)[1]]->type == King && figures[(*move)[0]][(*move)[1]]->totalMoves == 0) {
+		if (((*move)[2] == (*move)[0] + 2)) {
+			figures[(*move)[0] + 1][(*move)[1]] = figures[(*move)[0] + 3][(*move)[1]];
+			figures[(*move)[0] + 3][(*move)[1]] = nullptr;
+			moveType = MoveType::ShortCastling;
+		}
+		else if ((*move)[2] == (*move)[0] - 2) {
+			figures[(*move)[0] - 2][(*move)[1]] = figures[(*move)[0] - 4][(*move)[1]];
+			figures[(*move)[0] - 4][(*move)[1]] = nullptr;
+			moveType = MoveType::LongCastling;
+
+			(*move)[2] -= 1;
+		}
+	}
+
+	if (figures[(*move)[2]][(*move)[3]] != nullptr) {
+		(*move).push_back(figures[(*move)[2]][(*move)[3]]->type);
+		deadFigures.push_back(figures[(*move)[2]][(*move)[3]]);
+		figures[(*move)[2]][(*move)[3]] = nullptr;
+	}
+	figures[(*move)[2]][(*move)[3]] = figures[(*move)[0]][(*move)[1]];
+	figures[(*move)[0]][(*move)[1]]->totalMoves++;
+	figures[(*move)[0]][(*move)[1]] = nullptr;
+
+	return moveType;
 }
 
 Point Board::selectCell(Point pos)

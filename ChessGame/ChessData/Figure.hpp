@@ -14,6 +14,15 @@ enum Side {
 	Black = 1
 };
 
+enum MoveType {
+	None,
+	Default,
+	ShortCastling,
+	LongCastling,
+	LongPawnKill,
+	PawnSwap,
+};
+
 class Figure {
 public:
 	FigureType type;

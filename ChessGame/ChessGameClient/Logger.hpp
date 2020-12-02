@@ -9,6 +9,6 @@ public:
 	std::vector<std::vector<int>> extendedLog;
 
 	wchar_t GetUnicodeFigureRepresentation(FigureType figureType, int side);
-	void AddMove(std::vector<std::vector<Figure*>>* map, std::vector<int> move);
+	void AddMove(MoveType moveType, std::vector<std::vector<Figure*>>* map, std::vector<int> move);
 	std::vector<int> ResetMove();
 };

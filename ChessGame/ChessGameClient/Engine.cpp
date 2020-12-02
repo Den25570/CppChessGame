@@ -25,9 +25,13 @@ std::vector<int> selectBestMove(std::vector<std::vector<Figure*>>* map, int play
 								std::vector<std::vector<Figure*>> newMap = *map;
 								simulateMove(&newMap, xPos, yPos, xDst, yDst);
 								std::vector<int> moveRes = selectBestMove(&newMap, !player, depth + 1, moveScore < bestScore ? maxDepth - 1 : maxDepth);
+
+								if (moveRes[4] >= beatScore[0] * 0.75) {
+									moves[xDst][yDst] = -INT32_MAX;
+									continue;
+								}
 								depthScore = moveRes[4];
 							}
-							
 							//select best move
 							if (moveScore - depthScore > bestMoveScore) {
 								bestMoveScore = moveScore - depthScore;
@@ -139,6 +143,21 @@ std::vector<std::vector<int>> getPossibleMoves(std::vector<std::vector<Figure*>>
 				setAllCellsOnDirection(map, &result, xPos, yPos, i, j, 1, bestScoreOut);
 			}
 		}
+
+		//Castling
+		if (figure->totalMoves == 0) {
+			if (!(*map)[xPos - 1][yPos] && !(*map)[xPos - 2][yPos] && !(*map)[xPos - 3][yPos] && (*map)[xPos - 4][yPos] && (*map)[xPos - 4][yPos]->type == FigureType::Rook) {
+				result[xPos - 2][yPos] = evaluateCurrentMove(map, xPos, yPos, xPos - 3, yPos, player);
+				if (bestScoreOut && (*bestScoreOut) < result[xPos - 2][yPos])
+					(*bestScoreOut) = result[xPos - 2][yPos];
+			}
+			if (!(*map)[xPos + 1][yPos] && !(*map)[xPos + 2][yPos] && (*map)[xPos + 3][yPos] && (*map)[xPos + 3][yPos]->type == FigureType::Rook) {
+				result[xPos + 2][yPos] = evaluateCurrentMove(map, xPos, yPos, xPos + 2, yPos, player);
+				if (bestScoreOut && (*bestScoreOut) < result[xPos + 2][yPos])
+					(*bestScoreOut) = result[xPos + 2][yPos];
+			}
+		}
+
 		break;
 	}
 

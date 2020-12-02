@@ -56,11 +56,10 @@ public:
 	Color lightBoardColor;
 
 	bool TrySelectFigure(Point pos, int side);
-	bool TryMove(Point pos, std::vector<int>* move);
+	MoveType TryMove(Point pos, std::vector<int>* move);
+	MoveType AIMove(int side, std::vector<int>* move);
 	void InitGame();
 	void SetAllPossibleMoves(int side);
 	void GetFiguresAttackingKing(int side);
 	Point selectCell(Point pos);
-
-	std::vector<int> AIMove(int side);
 };

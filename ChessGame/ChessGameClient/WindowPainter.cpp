@@ -345,7 +345,7 @@ void WindowPainter::DrawDeadFigures()
 		Figure* deadFigure = sortedBlack[i];
 		Rect deadFigureRect = deadBlackFiguresRect;
 
-		x = deadFigureRect.X + (deadFigureRect.Height - offset) * i / 3;
+		x = deadFigureRect.X + (deadFigureRect.Height - offset) * i / 2;
 		y = deadFigureRect.Y + offset / 2;
 		RectF destRect(x, y, (deadFigureRect.Height - offset), (deadFigureRect.Height - offset));
 
