@@ -73,7 +73,6 @@ BOOL                InitInstance(HINSTANCE, int);
 void ChangePlayerMoveText();
 void ChangeControlsVisibility();
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 LRESULT CALLBACK ListViewProc(HWND hwnd,
     UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR)
@@ -381,12 +380,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // Разобрать выбор в меню:
             switch (wmId)
             {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
             case IDC_RESETBUTTON:
                 if ((game.Player1 != game.Player2) && ((game.CurrentActiveSide == 1 && game.Player2 == User) || (game.CurrentActiveSide == 0 && game.Player1 == User))) {
                     UnLogMove((game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);
@@ -545,24 +538,4 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
     return 0;
-}
-
-// Обработчик сообщений для окна "О программе".
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    UNREFERENCED_PARAMETER(lParam);
-    switch (message)
-    {
-    case WM_INITDIALOG:
-        return (INT_PTR)TRUE;
-
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-        {
-            EndDialog(hDlg, LOWORD(wParam));
-            return (INT_PTR)TRUE;
-        }
-        break;
-    }
-    return (INT_PTR)FALSE;
 }
