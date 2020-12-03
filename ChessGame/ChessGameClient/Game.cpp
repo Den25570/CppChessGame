@@ -48,6 +48,7 @@ void Game::ResetMove(bool updateMaps)
 			}
 		}
 
+		//reset move
 		if (move.size() == 5) {
 			this->board.figures[move[2]][move[3]] = this->board.deadFigures[this->board.deadFigures.size() - 1];
 			this->board.deadFigures.pop_back();
@@ -98,7 +99,7 @@ MoveType Game::AIMove()
 {
 	this->board.figuresAttackingKing.clear();
 	std::vector<int> move;
-	MoveType moveType = this->board.AIMove(this->CurrentActiveSide, &move);
+	MoveType moveType = this->board.AIMove(this->CurrentActiveSide, difficulty, &move);
 	this->logger.AddMove(moveType, &(this->board.figures), move);
 
 	PassMoveToNextPlayer();

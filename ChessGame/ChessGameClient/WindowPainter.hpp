@@ -53,6 +53,7 @@ public:
 	Panel* CreatePanel(Rect rect, std::vector<std::wstring> texts, std::vector<Color> textsColor, bool isShown, int id, bool dark);
 	void ChangeButtonVisibility(int id);
 	void ChangePanelVisibility(int id);
+	void ChangeAllControlsVisibility();
 	void DrawControls();
 	void DrawButtons();
 	void DrawPanels();

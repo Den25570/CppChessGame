@@ -7,6 +7,7 @@
 using namespace Gdiplus;
 #pragma comment (lib,"Gdiplus.lib")
 #include "Figure.hpp"
+#include "ThreadPool.hpp"
 
 struct BoardImageInfo {
 	int width;
@@ -55,9 +56,12 @@ public:
 	Color darkBoardColor;
 	Color lightBoardColor;
 
+	//utils
+	ThreadPool* threadPool;
+
 	bool TrySelectFigure(Point pos, int side);
 	MoveType TryMove(Point pos, std::vector<int>* move);
-	MoveType AIMove(int side, std::vector<int>* move);
+	MoveType AIMove(int side, int difficulty, std::vector<int>* move);
 	void InitGame();
 	void SetAllPossibleMoves(int side);
 	void GetFiguresAttackingKing(int side);

@@ -95,6 +95,16 @@ void WindowPainter::ChangePanelVisibility(int id)
 	return;
 }
 
+void WindowPainter::ChangeAllControlsVisibility()
+{
+	for (int i = 0; i < buttons.size(); i++) {
+		buttons[i].isShown = !buttons[i].isShown;
+	}
+	for (int i = 0; i < panels.size(); i++) {
+		panels[i].isShown = !panels[i].isShown;
+	}
+}
+
 void WindowPainter::DrawControls()
 {
 	this->DrawButtons();
@@ -171,11 +181,11 @@ void WindowPainter::DrawPanels()
 		Pen pen2(!panels[i].dark ? board->darkBoardColor : board->lightBoardColor, 2);
 		this->currentGraphics->FillRectangle(&brush, panels[i].rect);
 		this->currentGraphics->DrawRectangle(&pen, Rect(panels[i].rect.X + 1, panels[i].rect.Y, panels[i].rect.Width - 1, panels[i].rect.Height));
-		this->currentGraphics->DrawRectangle(&pen2, Rect(panels[i].rect.X + 2, panels[i].rect.Y + 2, panels[i].rect.Width - 3, panels[i].rect.Height - 4));
+	//	this->currentGraphics->DrawRectangle(&pen2, Rect(panels[i].rect.X + 2, panels[i].rect.Y + 2, panels[i].rect.Width - 3, panels[i].rect.Height - 4));
 
 		for (int j = 0; j < panels[i].texts.size(); j++) {
-			RectF rectF(panels[i].rect.X, panels[i].rect.Y + panels[i].rect.Height / panels[i].texts.size() * j + 4, panels[i].rect.Width, panels[i].rect.Height / panels[i].texts.size());
-			Font  font(&fontFamily, panels[i].rect.Height / panels[i].texts.size() - 12, FontStyleBold, UnitPoint);
+			RectF rectF(panels[i].rect.X, panels[i].rect.Y + panels[i].rect.Height / panels[i].texts.size() * j, panels[i].rect.Width, panels[i].rect.Height / panels[i].texts.size());
+			Font  font(&fontFamily, panels[i].rect.Width / (panels[i].texts[i].size() - 2), FontStyleBold, UnitPoint);
 			SolidBrush textSolidBrush(panels[i].textsColor[j]);
 			this->currentGraphics->DrawString(panels[i].texts[j].c_str(), -1, &font, rectF, &stringFormat, &textSolidBrush);
 		}

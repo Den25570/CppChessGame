@@ -1,7 +1,7 @@
 #include "Engine.hpp"
 #include <time.h>
 
-std::vector<int> selectBestMove(std::vector<std::vector<Figure*>>* map, int player, int depth, int maxDepth)
+std::vector<int> selectBestMove(ThreadPool* threadPool, std::vector<std::vector<Figure*>>* map, int player, int depth, int maxDepth)
 {
 	srand(static_cast<unsigned int>(time(0)));
 	sPoint bestFigureToMove; bestFigureToMove.X = 0; bestFigureToMove.Y = 0;
@@ -24,8 +24,8 @@ std::vector<int> selectBestMove(std::vector<std::vector<Figure*>>* map, int play
 								//find best enemy move
 								std::vector<std::vector<Figure*>> newMap = *map;
 								simulateMove(&newMap, xPos, yPos, xDst, yDst);
-								std::vector<int> moveRes = selectBestMove(&newMap, !player, depth + 1, moveScore < bestScore ? maxDepth - 1 : maxDepth);
-
+								std::vector<int> moveRes = selectBestMove(threadPool, &newMap, !player, depth + 1, moveScore < bestScore ? maxDepth - 1 : maxDepth);
+								unSimulateMove(map, xPos, yPos, xDst, yDst);
 								if (moveRes[4] >= beatScore[0] * 0.75) {
 									moves[xDst][yDst] = -INT32_MAX;
 									continue;
@@ -237,8 +237,38 @@ int evaluateCurrentMove(std::vector<std::vector<Figure*>>* map, size_t xPos, siz
 
 void simulateMove(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t yPos, size_t xDest, size_t yDest)
 {
+	//Castling
+	if ((*map)[xPos][yPos]->type == King && (*map)[xPos][yPos]->totalMoves == 0) {
+		if ((xDest == xPos + 2)) {
+			(*map)[xPos + 1][yPos] = (*map)[xPos + 3][yPos];
+			(*map)[xPos + 3][yPos] = nullptr;
+			(*map)[xPos + 1][yPos]->totalMoves++;
+		}
+		else if (xDest == xPos - 2) {
+			(*map)[xPos - 2][yPos] = (*map)[xPos - 4][yPos];
+			(*map)[xPos - 4][yPos] = nullptr;
+			(*map)[xPos - 2][yPos]->totalMoves++;
+		}
+	}
+
 	(*map)[xDest][yDest] = (*map)[xPos][yPos];
 	(*map)[xPos][yPos] = nullptr;
+	(*map)[xDest][yDest]->totalMoves++;
+}
+
+void unSimulateMove(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t yPos, size_t xDest, size_t yDest)
+{
+	//Castling
+	if ((*map)[xPos][yPos]->type == King && (*map)[xPos][yPos]->totalMoves == 0) {
+		if ((xDest == xPos + 2)) {
+			(*map)[xPos + 3][yPos]->totalMoves--;
+		}
+		else if (xDest == xPos - 2) {
+			(*map)[xPos - 4][yPos]->totalMoves--;
+		}
+	}
+
+	(*map)[xPos][yPos]->totalMoves--;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -267,7 +297,8 @@ bool FilterUserMoves(std::vector<std::vector<Figure*>>* map, std::vector<std::ve
 			if ((*moves)[xDst][yDst] != -INT32_MAX) {
 				std::vector<std::vector<Figure*>> newMap = *map;
 				simulateMove(&newMap, xPos, yPos, xDst, yDst);
-				std::vector<int> moveRes = selectBestMove(&newMap, !player, 1, 1);
+				std::vector<int> moveRes = selectBestMove(nullptr, &newMap, !player, 1, 1);
+				unSimulateMove(map, xPos, yPos, xDst, yDst);
 				if (moveRes[4] >= beatScore[0] * 0.75) {
 					(*moves)[xDst][yDst] = -INT32_MAX;
 				}

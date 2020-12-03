@@ -6,7 +6,6 @@
 #include "WindowPainter.hpp"
 #include "Board.hpp"
 #include "Game.hpp"
-#include "ThreadPool.hpp"
 #include <iostream>
 
 #include <CommCtrl.h>
@@ -20,12 +19,14 @@ name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #define MAX_LOADSTRING 100
+#define IDC_TRACKBAR 1110
 #define IDC_LISTVIEW 1111
 #define IDC_SURRENDERBUTTON 1112
 #define IDC_RESETBUTTON 1113
 #define IDC_FIGUREINGOPANEL1 1114
 #define IDC_FIGUREINGOPANEL2 1115
 #define IDC_MOVEGOPANEL 1116
+#define IDC_DIFFPANEL 1120
 
 #define IDC_PVPBUTTON 1117
 #define IDC_PVEBUTTON 1118
@@ -44,6 +45,8 @@ bool isMemorized = false;
 
 Point listViewPos;
 
+Rect diffPanelRect;
+Rect trackbarRect;
 Rect surrenerButtonPos;
 Rect resetButtonPos;
 Rect figureInfoPanelRect1;
@@ -59,6 +62,7 @@ const int listViewWidth = 225;
 //Controls
 int idTimer = -1;
 HWND mainWnd;
+HWND hWndTrackBar;
 HWND hWndListView;
 HWND hwndSurrenderButton;
 HWND hwndResetMoveButton;
@@ -66,6 +70,9 @@ Panel* killedFiguresPanel1;
 Panel* killedFiguresPanel2;
 Panel* moveInfoPanel;
 Panel* gameResultPanel;
+Panel* diffPanel;
+
+HBRUSH hbrBkgnd;
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -144,6 +151,39 @@ HWND CreateListView(HWND hwndParent, Point pos)
     ListView_InsertColumn(hWndListView, 2, &lvc);
 
     return (hWndListView);
+}
+
+HWND WINAPI CreateTrackbar(Rect rect, HWND hwndDlg, UINT iMin, UINT iMax, UINT iSelMin, UINT iSelMax)  
+{
+    InitCommonControls(); // loads common control's DLL 
+
+    HWND hwndTrack = CreateWindowEx(
+        0,                               // no extended styles 
+        TRACKBAR_CLASS,                  // class name 
+        L"Trackbar Control",              // title (caption) 
+        WS_CHILD | WS_VISIBLE | TBS_TRANSPARENTBKGND | TBS_ENABLESELRANGE,
+        rect.X, rect.Y,                          // position 
+        rect.Width, rect.Height,                         // size 
+        hwndDlg,                         // parent window 
+        (HMENU)IDC_TRACKBAR,
+        GetModuleHandle(NULL),                       // instance 
+        NULL                             // no WM_CREATE parameter 
+    );
+
+    SendMessage(hwndTrack, TBM_SETRANGE,
+        (WPARAM)TRUE,                   // redraw flag 
+        (LPARAM)MAKELONG(iMin, iMax));  // min. & max. positions
+    SendMessage(hwndTrack, TBM_SETPAGESIZE,
+        0, (LPARAM)4);                  // new page size 
+    SendMessage(hwndTrack, TBM_SETSEL,
+        (WPARAM)FALSE,                  // redraw flag 
+        (LPARAM)MAKELONG(iSelMin, iSelMax));
+    SendMessage(hwndTrack, TBM_SETPOS,
+        (WPARAM)TRUE,                   // redraw flag 
+        (LPARAM)iSelMin);
+
+    SetFocus(hwndTrack);
+    return hwndTrack;
 }
 
 LRESULT CALLBACK MyStaticWndProc(HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam)
@@ -275,11 +315,13 @@ void UnLogMove(int moveNum, int side) {
 void ShowGameElements(HWND hWnd) {
     ChangeControlsVisibility();
     ShowWindow(hWndListView, SW_SHOWDEFAULT);
+    ShowWindow(hWndTrackBar, SW_HIDE);
 }
 
 void ShowMenuElements(HWND hWnd) {
     ChangeControlsVisibility();
     ShowWindow(hWndListView, SW_HIDE);
+    ShowWindow(hWndTrackBar, SW_SHOWDEFAULT);
 }
 
 
@@ -325,24 +367,25 @@ void InitGameElements(HWND hWnd) {
 void ChangeControlsVisibility()
 {
     ListView_DeleteAllItems(hWndListView);
-    windowPainter.ChangeButtonVisibility(IDC_SURRENDERBUTTON);
-    windowPainter.ChangeButtonVisibility(IDC_RESETBUTTON);
-    windowPainter.ChangePanelVisibility(IDC_FIGUREINGOPANEL1);
-    windowPainter.ChangePanelVisibility(IDC_FIGUREINGOPANEL2);
-    windowPainter.ChangePanelVisibility(IDC_MOVEGOPANEL);
-    windowPainter.ChangeButtonVisibility(IDC_PVPBUTTON);
-    windowPainter.ChangeButtonVisibility(IDC_PVEBUTTON);
-    windowPainter.ChangeButtonVisibility(IDC_QUITBUTTON);
+    windowPainter.ChangeAllControlsVisibility();
 }
 
 void InitMenuElements(HWND hWnd) {
+    
+
     pvpButtonRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 170 / 2 - 10,
         game.board.boardInfo.rect.Y + game.board.boardImageInfo.topOffset * game.board.boardInfo.boardSizeMult, 170, 40);
     pveButtonRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 170 / 2 - 10,
         game.board.boardInfo.rect.Y + game.board.boardImageInfo.topOffset * game.board.boardInfo.boardSizeMult + 50, 170, 40);
     quitButtonRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 170 / 2 - 10,
-        game.board.boardInfo.rect.Y + game.board.boardImageInfo.topOffset * game.board.boardInfo.boardSizeMult + 100, 170, 40);
+        game.board.boardInfo.rect.Y + game.board.boardImageInfo.topOffset * game.board.boardInfo.boardSizeMult + 180, 170, 40);
+    diffPanelRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 150 / 2 - 10,
+        game.board.boardInfo.rect.Y + game.board.boardImageInfo.topOffset * game.board.boardInfo.boardSizeMult + 100, 150, 30);
+    trackbarRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 148 / 2 - 10,
+        game.board.boardInfo.rect.Y + game.board.boardImageInfo.topOffset * game.board.boardInfo.boardSizeMult + 132, 148, 30);
+    hWndTrackBar = CreateTrackbar(trackbarRect, hWnd, 1, 10, 1, 10);
 
+    diffPanel = windowPainter.CreatePanel(diffPanelRect, {L"Difficulty: Easy(1)"}, {Color(0,0,0)}, false, IDC_DIFFPANEL, false);
     windowPainter.CreateButton(pvpButtonRect, L"Player vs Player", false, IDC_PVPBUTTON);
     windowPainter.CreateButton(pveButtonRect, L"Player vs AI", false, IDC_PVEBUTTON);
     windowPainter.CreateButton(quitButtonRect, L"Quit", false, IDC_QUITBUTTON);
@@ -362,6 +405,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
         //window init
         threadPool.InitThreadPool();
+        game.board.threadPool = &threadPool;
 
         windowPainter.SetBoard(&game.board);
         windowPainter.LoadSprites();
@@ -433,6 +477,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (game.CurrentGameState == MoveState::InMenu) {              
                 windowPainter.DrawField();
                 windowPainter.DrawMenu();
+                windowPainter.DrawPanels();
                 windowPainter.DrawButtons();
                 windowPainter.DrawFigures();
                 windowPainter.DrawDangerHints(game.CurrentActiveSide);
@@ -467,6 +512,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             EndPaint(hWnd, &ps);
         }
         break;
+    case WM_CTLCOLORSTATIC:
+    {
+        HDC hdcStatic = (HDC)wParam;
+        SetTextColor(hdcStatic, RGB(game.board.lightBoardColor.GetR(), game.board.lightBoardColor.GetG(), game.board.lightBoardColor.GetB()));
+        SetBkColor(hdcStatic, RGB(game.board.lightBoardColor.GetR(), game.board.lightBoardColor.GetG(), game.board.lightBoardColor.GetB()));
+
+        if (hbrBkgnd == NULL)
+        {
+            hbrBkgnd = CreateSolidBrush(RGB(game.board.lightBoardColor.GetR(), game.board.lightBoardColor.GetG(), game.board.lightBoardColor.GetB()));
+        }
+        return (INT_PTR)hbrBkgnd;
+    }
     case WM_SIZE:
         listViewPos = Point(game.board.boardInfo.rect.Width, 0);
         windowPainter.SetWindow(hWnd, 40, 40);     
@@ -479,6 +536,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         );
 
         break;
+    case WM_HSCROLL: {
+        int wmId = LOWORD(wParam);
+        int oldpos;
+        switch (wmId) {
+        case SB_LINERIGHT:
+            game.difficulty++;
+            break;
+        case SB_LINELEFT:
+            game.difficulty--;
+            break;
+        case 3:
+            oldpos = SendMessage(hWndTrackBar, TBM_GETPOS, 0, 0);
+            SendMessage(hWndTrackBar, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)game.difficulty);
+            return 0;
+        case SB_THUMBTRACK:
+        case SB_THUMBPOSITION:
+            game.difficulty = HIWORD(wParam);
+            break;
+        default:
+            return 0;
+        }
+        for (int i = 0; i < windowPainter.panels.size(); i++)
+            if (windowPainter.panels[i].id == IDC_DIFFPANEL)
+                windowPainter.panels[i].texts[0] = std::wstring(L"Difficulty:")+ std::wstring(game.difficulty <= 3 ? L" Easy" : game.difficulty <= 6 ? L" Okay" : L" Hard") + L'(' + std::to_wstring(game.difficulty) + L')';
+        InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
+        break;
+    }      
     case WM_MOUSEMOVE:
         windowPainter.xMousePos = LOWORD(lParam);
         windowPainter.yMousePos = HIWORD(lParam);

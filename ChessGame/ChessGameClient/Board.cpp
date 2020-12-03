@@ -122,11 +122,11 @@ void Board::GetFiguresAttackingKing(int side)
 	}
 }
 
-MoveType Board::AIMove(int side, std::vector<int> *move)
+MoveType Board::AIMove(int side, int difficulty, std::vector<int> *move)
 {
 	MoveType moveType = MoveType::None;
 
-	(*move) = selectBestMove(&(this->figures), side, 1, 4);
+	(*move) = selectBestMove(threadPool, &(this->figures), side, 1, difficulty);
 	(*move).pop_back();
 
 	//move

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "Figure.hpp"
+#include "ThreadPool.hpp"
 
 struct sPoint {
 	int X;
@@ -12,7 +13,7 @@ const int beatScore[6] = {
 	20000, 900, 330, 320, 500, 100
 };
 
-const int randomFactor = 4;
+const int randomFactor = 2;
 
 const int pawnMoveScore[8][8] = {
 	250,  250,  250,  250,  250,  250,  250,  250,
@@ -80,7 +81,7 @@ const int kingEarlyMoveScore[8][8] = {
 	 20, 30, 10,  0,  0, 10, 30, 20
 };
 
-std::vector<int> selectBestMove(std::vector<std::vector<Figure*>>* map, int player, int depth, int maxDepth);
+std::vector<int> selectBestMove(ThreadPool* threadPool, std::vector<std::vector<Figure*>>* map, int player, int depth, int maxDepth);
 
 //1. Move generation
 std::vector<std::vector<int>> getPossibleMoves(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t yPos, int player, int* bestScoreOut);
@@ -92,6 +93,7 @@ int evaluateCurrentMove(std::vector<std::vector<Figure*>>* map, size_t xPos, siz
 
 //3. Minmax tree build
 void simulateMove(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t yPos, size_t xDest, size_t yDest);
+void unSimulateMove(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t yPos, size_t xDest, size_t yDest);
 
 //utils
 sPoint getMaxValue(std::vector<std::vector<int>>* values);

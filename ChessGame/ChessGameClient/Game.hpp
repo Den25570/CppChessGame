@@ -25,6 +25,7 @@ public:
 	PlayerType Player2;
 	Board board;
 	bool isMate;
+	int difficulty = 1;
 
 	//utils
 	Logger logger;
