@@ -20,11 +20,18 @@ void Game::InitGame(PlayerType Player1, PlayerType Player2)
 	if (Player2 == PlayerType::User)
 		this->board.SetAllPossibleMoves(1);
 
+	this->board.figuresAttackingKing.clear();
 	this->CurrentActiveSide = 0;
 	this->isMate = false;
 	this->CurrentGameState = MoveState::WaitForMove;
 	this->logger.log.clear();
 	this->logger.extendedLog.clear();
+}
+
+void Game::FinishGame()
+{
+//	this->board.figuresAttackingKing.clear();
+	this->CurrentGameState = MoveState::InMenu;
 }
 
 void Game::ResetMove(bool updateMaps)

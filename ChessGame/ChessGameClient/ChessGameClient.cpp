@@ -329,7 +329,7 @@ void AIMove(HWND hWnd) {
     MoveType moveType = game.AIMove();
     if (game.isMate) {
         ShowMenuElements(hWnd);
-        game.CurrentGameState = MoveState::InMenu;
+        game.FinishGame();
         return;
     }
 
@@ -383,7 +383,7 @@ void InitMenuElements(HWND hWnd) {
         game.board.boardInfo.rect.Y + game.board.boardImageInfo.topOffset * game.board.boardInfo.boardSizeMult + 100, 150, 30);
     trackbarRect = Rect(game.board.boardInfo.rect.Width + listViewWidth / 2 - 148 / 2 - 10,
         game.board.boardInfo.rect.Y + game.board.boardImageInfo.topOffset * game.board.boardInfo.boardSizeMult + 132, 148, 30);
-    hWndTrackBar = CreateTrackbar(trackbarRect, hWnd, 1, 10, 1, 10);
+    hWndTrackBar = CreateTrackbar(trackbarRect, hWnd, 1, 6, 1, 6);
 
     diffPanel = windowPainter.CreatePanel(diffPanelRect, {L"Difficulty: Easy(1)"}, {Color(0,0,0)}, false, IDC_DIFFPANEL, false);
     windowPainter.CreateButton(pvpButtonRect, L"Player vs Player", false, IDC_PVPBUTTON);
@@ -439,7 +439,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 
             case IDC_SURRENDERBUTTON:
                 ShowMenuElements(hWnd);
-                game.CurrentGameState = MoveState::InMenu;
+                game.FinishGame();               
                 break;
             case IDC_PVPBUTTON:
                 ShowGameElements(hWnd);
@@ -559,7 +559,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         for (int i = 0; i < windowPainter.panels.size(); i++)
             if (windowPainter.panels[i].id == IDC_DIFFPANEL)
-                windowPainter.panels[i].texts[0] = std::wstring(L"Difficulty:")+ std::wstring(game.difficulty <= 3 ? L" Easy" : game.difficulty <= 6 ? L" Okay" : L" Hard") + L'(' + std::to_wstring(game.difficulty) + L')';
+                windowPainter.panels[i].texts[0] = std::wstring(L"Difficulty:")+ std::wstring(game.difficulty <= 3 ? L" Easy" : game.difficulty <= 5 ? L" Okay" : L" Hard") + L'(' + std::to_wstring(game.difficulty) + L')';
         InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
         break;
     }      
@@ -593,7 +593,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (moveType != MoveType::None) {
                 if (game.isMate) {
                     ShowMenuElements(hWnd);
-                    game.CurrentGameState = MoveState::InMenu;
+                    game.FinishGame();
                     break;
                 }
                 LogMove(moveType, game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);

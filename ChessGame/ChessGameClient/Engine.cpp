@@ -20,7 +20,7 @@ std::vector<int> selectBestMove(ThreadPool* threadPool, std::vector<std::vector<
 							moves[xDst][yDst] += (rand() % randomFactor * 2) - randomFactor;
 							int moveScore = moves[xDst][yDst];
 							int depthScore = 0;
-							if (depth < (moves[xDst][yDst] < bestScore ? maxDepth - 1 : maxDepth)) {
+							if (depth < (moves[xDst][yDst] < bestScore ? maxDepth - 2 : maxDepth)) {
 								//find best enemy move
 								std::vector<std::vector<Figure*>> newMap = *map;
 								simulateMove(&newMap, xPos, yPos, xDst, yDst);

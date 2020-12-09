@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
-#include <Figure.hpp>
+#include "Figure.hpp"
 
 class Logger {
 public:
