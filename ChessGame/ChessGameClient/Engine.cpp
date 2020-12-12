@@ -15,7 +15,7 @@ std::vector<int> selectBestMove(ThreadPool* threadPool, std::vector<std::vector<
 				int bestScore = -INT32_MAX;
 
 				std::vector<std::vector<int>> moves = getPossibleMoves(map, xPos, yPos, player, &bestScore, false);
-				if (useFilter)
+				if (useFilter && (depth <= maxDepth ))
 					FilterUserMoves(map, &moves, xPos, yPos, player);
 
 				for (int xDst = 0; xDst < 8; xDst++) {
@@ -39,6 +39,7 @@ std::vector<int> selectBestMove(ThreadPool* threadPool, std::vector<std::vector<
 
 								//continue if enemy can beat king
 								if (moveRes[4] == beatScore[0]) {
+									moves[xDst][yDst] = -INT32_MAX;
 									continue;
 								}
 								depthScore = moveRes[4];

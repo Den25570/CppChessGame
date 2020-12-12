@@ -576,7 +576,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_LBUTTONDOWN: 
         windowPainter.clickedXMousePos = LOWORD(lParam);
         windowPainter.clickedYMousePos = HIWORD(lParam);
-        if (!isDragging) {         
+        if (!isDragging && game.CurrentGameState != InMenu) {
             if (game.TrySelectFigure(Point(LOWORD(lParam), HIWORD(lParam)))) {             
                 isDragging = true;
                 isMemorized = false;
@@ -588,7 +588,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_LBUTTONUP:
         windowPainter.clickedXMousePos = 0;
         windowPainter.clickedYMousePos = 0;
-        if (isDragging) {
+        if (isDragging && game.CurrentGameState != InMenu) {
             MoveType moveType = game.TryMove(Point(LOWORD(lParam), HIWORD(lParam)));
             if (moveType != MoveType::None) {
                 if (game.isMate) {
