@@ -91,7 +91,7 @@ void Board::SetAllPossibleMoves(int side)
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
 			if (this->figures[i][j] && this->figures[i][j]->side == side) {
-				std::vector<std::vector<int>> moves = getPossibleMoves(&(this->figures), i, j, 0, nullptr);
+				std::vector<std::vector<int>> moves = getPossibleMoves(&(this->figures), i, j, 0, nullptr, false);
 				bool noMovesRemain = FilterUserMoves(&(this->figures), &moves, i, j, side);
 				isMate &= noMovesRemain;
 				for (int x= 0; x < 8; x++) {
@@ -111,7 +111,7 @@ void Board::GetFiguresAttackingKing(int side)
 		for (int j = 0; j < 8; j++) {
 			if (this->figures[i][j] && this->figures[i][j]->side == !side) {
 				int bestScore = -INT32_MAX;
-				std::vector<std::vector<int>> moves = getPossibleMoves(&(this->figures), i, j, 0, &bestScore);
+				std::vector<std::vector<int>> moves = getPossibleMoves(&(this->figures), i, j, 0, &bestScore, true);
 				if (bestScore >= beatScore[0] * 0.75) {
 					{
 						this->figuresAttackingKing.push_back(Point(i, j));
@@ -126,7 +126,7 @@ MoveType Board::AIMove(int side, int difficulty, std::vector<int> *move)
 {
 	MoveType moveType = MoveType::None;
 
-	(*move) = selectBestMove(threadPool, &(this->figures), side, 1, difficulty);
+	(*move) = selectBestMove(threadPool, &(this->figures), side, 1, difficulty , true);
 	(*move).pop_back();
 
 	//move

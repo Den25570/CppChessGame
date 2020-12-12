@@ -81,12 +81,13 @@ const int kingEarlyMoveScore[8][8] = {
 	 20, 30, 10,  0,  0, 10, 30, 20
 };
 
-std::vector<int> selectBestMove(ThreadPool* threadPool, std::vector<std::vector<Figure*>>* map, int player, int depth, int maxDepth);
+std::vector<int> selectBestMove(ThreadPool* threadPool, std::vector<std::vector<Figure*>>* map, int player, int depth, int maxDepth, bool useFilter);
 
 //1. Move generation
-std::vector<std::vector<int>> getPossibleMoves(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t yPos, int player, int* bestScoreOut);
+std::vector<std::vector<int>> getPossibleMoves(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t yPos, int player, int* bestScoreOut, bool ignoreCastling);
 void setAllCellsOnDirection(std::vector<std::vector<Figure*>>* map, std::vector<std::vector<int>>* cells, size_t xPos, size_t yPos, size_t xDest, size_t yDest, int maxMove, int* bestScoreOuts);
 bool validateCoords(size_t xPos, size_t yPos);
+bool cellsUnderAttack(std::vector<std::vector<Figure*>>* map, std::vector<size_t> xPos, std::vector<size_t> yPos, int enemy);
 
 //2. Position evaluation
 int evaluateCurrentMove(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t yPos, size_t xDest, size_t yDest, int player);

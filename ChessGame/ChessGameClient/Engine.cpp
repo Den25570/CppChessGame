@@ -1,7 +1,7 @@
 #include "Engine.hpp"
 #include <time.h>
 
-std::vector<int> selectBestMove(ThreadPool* threadPool, std::vector<std::vector<Figure*>>* map, int player, int depth, int maxDepth)
+std::vector<int> selectBestMove(ThreadPool* threadPool, std::vector<std::vector<Figure*>>* map, int player, int depth, int maxDepth, bool useFilter)
 {
 	srand(static_cast<unsigned int>(time(0)));
 	sPoint bestFigureToMove; bestFigureToMove.X = 0; bestFigureToMove.Y = 0;
@@ -13,21 +13,32 @@ std::vector<int> selectBestMove(ThreadPool* threadPool, std::vector<std::vector<
 			//foreach figure find moves
 			if ((*map)[xPos][yPos] && (*map)[xPos][yPos]->side == player) {
 				int bestScore = -INT32_MAX;
-				std::vector<std::vector<int>> moves = getPossibleMoves(map, xPos, yPos, player, &bestScore);
+
+				std::vector<std::vector<int>> moves = getPossibleMoves(map, xPos, yPos, player, &bestScore, false);
+				if (useFilter)
+					FilterUserMoves(map, &moves, xPos, yPos, player);
+
 				for (int xDst = 0; xDst < 8; xDst++) {
 					for (int yDst = 0; yDst < 8; yDst++) {						
 						if (moves[xDst][yDst] != -INT32_MAX) {
+
+							//return if can beat king
+							if (moves[xDst][yDst] == beatScore[0]) {
+								return std::vector<int>{xPos, yPos, xDst, yDst, moves[xDst][yDst]};
+							}
+
 							moves[xDst][yDst] += (rand() % randomFactor * 2) - randomFactor;
 							int moveScore = moves[xDst][yDst];
 							int depthScore = 0;
-							if (depth < (moves[xDst][yDst] < bestScore ? maxDepth - 2 : maxDepth)) {
+							if (depth < (moves[xDst][yDst] < bestScore ? maxDepth - 1 : maxDepth)) {
 								//find best enemy move
 								std::vector<std::vector<Figure*>> newMap = *map;
 								simulateMove(&newMap, xPos, yPos, xDst, yDst);
-								std::vector<int> moveRes = selectBestMove(threadPool, &newMap, !player, depth + 1, moveScore < bestScore ? maxDepth - 1 : maxDepth);
+								std::vector<int> moveRes = selectBestMove(threadPool, &newMap, !player, depth + 1, moveScore < bestScore ? maxDepth - 1 : maxDepth, useFilter);
 								unSimulateMove(map, xPos, yPos, xDst, yDst);
-								if (moveRes[4] >= beatScore[0] * 0.75) {
-									moves[xDst][yDst] = -INT32_MAX;
+
+								//continue if enemy can beat king
+								if (moveRes[4] == beatScore[0]) {
 									continue;
 								}
 								depthScore = moveRes[4];
@@ -54,7 +65,7 @@ std::vector<int> selectBestMove(ThreadPool* threadPool, std::vector<std::vector<
 //													Move generation
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::vector<std::vector<int>> getPossibleMoves(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t yPos, int player, int* bestScoreOut)
+std::vector<std::vector<int>> getPossibleMoves(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t yPos, int player, int* bestScoreOut, bool ignoreCastling)
 {
 	Figure* figure = (*map)[xPos][yPos];
 
@@ -145,18 +156,23 @@ std::vector<std::vector<int>> getPossibleMoves(std::vector<std::vector<Figure*>>
 		}
 
 		//Castling
-		if (figure->totalMoves == 0) {
-			if (!(*map)[xPos - 1][yPos] && !(*map)[xPos - 2][yPos] && !(*map)[xPos - 3][yPos] && (*map)[xPos - 4][yPos] && (*map)[xPos - 4][yPos]->type == FigureType::Rook) {
-				result[xPos - 2][yPos] = evaluateCurrentMove(map, xPos, yPos, xPos - 3, yPos, player);
-				if (bestScoreOut && (*bestScoreOut) < result[xPos - 2][yPos])
-					(*bestScoreOut) = result[xPos - 2][yPos];
-			}
-			if (!(*map)[xPos + 1][yPos] && !(*map)[xPos + 2][yPos] && (*map)[xPos + 3][yPos] && (*map)[xPos + 3][yPos]->type == FigureType::Rook) {
-				result[xPos + 2][yPos] = evaluateCurrentMove(map, xPos, yPos, xPos + 2, yPos, player);
-				if (bestScoreOut && (*bestScoreOut) < result[xPos + 2][yPos])
-					(*bestScoreOut) = result[xPos + 2][yPos];
+		if (!ignoreCastling) {
+			if (figure->totalMoves == 0) {
+				if (!(*map)[xPos - 1][yPos] && !(*map)[xPos - 2][yPos] && !(*map)[xPos - 3][yPos] && (*map)[xPos - 4][yPos] && (*map)[xPos - 4][yPos]->type == FigureType::Rook &&
+					!cellsUnderAttack(map, { xPos - 1, xPos - 2, xPos - 3 }, { yPos , yPos,yPos }, !player)) {
+					result[xPos - 2][yPos] = evaluateCurrentMove(map, xPos, yPos, xPos - 3, yPos, player);
+					if (bestScoreOut && (*bestScoreOut) < result[xPos - 2][yPos])
+						(*bestScoreOut) = result[xPos - 2][yPos];
+				}
+				if (!(*map)[xPos + 1][yPos] && !(*map)[xPos + 2][yPos] && (*map)[xPos + 3][yPos] && (*map)[xPos + 3][yPos]->type == FigureType::Rook &&
+					!cellsUnderAttack(map, { xPos + 1, xPos + 2 }, { yPos , yPos }, !player)) {
+					result[xPos + 2][yPos] = evaluateCurrentMove(map, xPos, yPos, xPos + 2, yPos, player);
+					if (bestScoreOut && (*bestScoreOut) < result[xPos + 2][yPos])
+						(*bestScoreOut) = result[xPos + 2][yPos];
+				}
 			}
 		}
+
 
 		break;
 	}
@@ -189,6 +205,31 @@ void setAllCellsOnDirection(std::vector<std::vector<Figure*>>* map, std::vector<
 bool validateCoords(size_t xPos, size_t yPos)
 {
 	return (xPos < 8 && yPos < 8 && xPos >= 0 && yPos >= 0);
+}
+
+bool cellsUnderAttack(std::vector<std::vector<Figure*>>* map, std::vector<size_t> xPos, std::vector<size_t> yPos, int enemy)
+{
+	for (int x = 0; x < 8; x++) {
+		for (int y = 0; y < 8; y++) {
+			//foreach figure find moves
+			if ((*map)[x][y] && (*map)[x][y]->side == enemy) {
+				std::vector<std::vector<int>> moves = getPossibleMoves(map, x, y, enemy, nullptr, true);
+				for (int xDst = 0; xDst < 8; xDst++) {
+					for (int yDst = 0; yDst < 8; yDst++) {
+						if (moves[xDst][yDst] != -INT32_MAX) {
+							
+							for (int i = 0; i < xPos.size(); i++) {
+								if (xPos[i] == xDst && yPos[i] == yDst)
+									return true;
+							}
+
+						}
+					}
+				}
+			}
+		}
+	}
+	return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -296,9 +337,11 @@ bool FilterUserMoves(std::vector<std::vector<Figure*>>* map, std::vector<std::ve
 		for (int yDst = 0; yDst < 8; yDst++) {
 			if ((*moves)[xDst][yDst] != -INT32_MAX) {
 				std::vector<std::vector<Figure*>> newMap = *map;
+
 				simulateMove(&newMap, xPos, yPos, xDst, yDst);
-				std::vector<int> moveRes = selectBestMove(nullptr, &newMap, !player, 1, 1);
+				std::vector<int> moveRes = selectBestMove(nullptr, &newMap, !player, 1, 0, false);
 				unSimulateMove(map, xPos, yPos, xDst, yDst);
+
 				if (moveRes[4] >= beatScore[0] * 0.75) {
 					(*moves)[xDst][yDst] = -INT32_MAX;
 				}
