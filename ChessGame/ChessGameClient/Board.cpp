@@ -38,6 +38,12 @@ MoveType Board::TryMove(Point pos, std::vector<int>* move)
 				}
 			}
 
+			//Promotion
+			if (figures[selectedCell.X][selectedCell.Y]->type == Pawn && (destCell.Y == 0 || destCell.Y == 7)) {
+				figures[selectedCell.X][selectedCell.Y]->type = Queen;
+				moveType = MoveType::Promotion;
+			}
+
 			(*move).push_back(destCell.X);
 			(*move).push_back(destCell.Y);
 
@@ -146,6 +152,12 @@ MoveType Board::AIMove(int side, int difficulty, std::vector<int> *move)
 
 			(*move)[2] -= 1;
 		}
+	}
+
+	//Promotion
+	if (figures[(*move)[0]][(*move)[1]]->type == Pawn && ((*move)[3] == 0 || (*move)[3] == 7)) {
+		figures[(*move)[0]][(*move)[1]]->type = Queen;
+		moveType = MoveType::Promotion;
 	}
 
 	if (figures[(*move)[2]][(*move)[3]] != nullptr) {

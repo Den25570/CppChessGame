@@ -20,12 +20,15 @@ enum MoveType {
 	ShortCastling,
 	LongCastling,
 	LongPawnKill,
-	PawnSwap,
+	Promotion,
 };
 
 class Figure {
 public:
 	FigureType type;
+	bool isOriginalyPawn;
+	int promotionMoveNum;
+
 	Side side;
 	int totalMoves;
 	bool possibleMovesMap[8][8];
@@ -34,11 +37,13 @@ public:
 		this->type = _type;
 		this->side = (Side)_side;
 		this->totalMoves = 0;
+		isOriginalyPawn = (_type == Pawn);
 	}
 
 	Figure(FigureType _type, Side _side) {
 		this->type = _type;
 		this->side = _side;
 		this->totalMoves = 0;
+		this->isOriginalyPawn = (_type == Pawn);
 	}
 };

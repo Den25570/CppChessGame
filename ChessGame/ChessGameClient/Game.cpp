@@ -55,8 +55,13 @@ void Game::ResetMove(bool updateMaps)
 			}
 		}
 
+		//reset promotion
+		if (move[5] == Promotion && board.figures[move[2]][move[3]]->isOriginalyPawn && (move[3] == 0 || move[3] == 7)) {
+			board.figures[move[2]][move[3]]->type = Pawn;
+		}
+
 		//reset move
-		if (move.size() == 5) {
+		if (move[4] != -1) {
 			this->board.figures[move[2]][move[3]] = this->board.deadFigures[this->board.deadFigures.size() - 1];
 			this->board.deadFigures.pop_back();
 		}
@@ -91,10 +96,10 @@ MoveType Game::TryMove(Point pos)
 		this->board.figuresAttackingKing.clear();
 
 		if (move.size() != 3) {
-			this->logger.AddMove(moveType, &(this->board.figures), std::vector<int> {this->board.selectedCell.X, this->board.selectedCell.Y, move[0], move[1]});
+			this->logger.AddMove(moveType, &(this->board.figures), std::vector<int> {this->board.selectedCell.X, this->board.selectedCell.Y, move[0], move[1], -1, moveType});
 		}
 		else {
-			this->logger.AddMove(moveType, &(this->board.figures), std::vector<int> {this->board.selectedCell.X, this->board.selectedCell.Y, move[0], move[1], move[2]});
+			this->logger.AddMove(moveType, &(this->board.figures), std::vector<int> {this->board.selectedCell.X, this->board.selectedCell.Y, move[0], move[1], move[2], moveType});
 		}
 		
 		PassMoveToNextPlayer();
@@ -107,6 +112,10 @@ MoveType Game::AIMove()
 	this->board.figuresAttackingKing.clear();
 	std::vector<int> move;
 	MoveType moveType = this->board.AIMove(this->CurrentActiveSide, difficulty, &move);
+	if (move.size() != 5) {
+		move.push_back(-1);
+	}
+	move.push_back(moveType);
 	this->logger.AddMove(moveType, &(this->board.figures), move);
 
 	PassMoveToNextPlayer();

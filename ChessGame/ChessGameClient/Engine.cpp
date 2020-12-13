@@ -15,7 +15,7 @@ std::vector<int> selectBestMove(ThreadPool* threadPool, std::vector<std::vector<
 				int bestScore = -INT32_MAX;
 
 				std::vector<std::vector<int>> moves = getPossibleMoves(map, xPos, yPos, player, &bestScore, false);
-				if (useFilter && (depth <= maxDepth ))
+				if (useFilter)
 					FilterUserMoves(map, &moves, xPos, yPos, player);
 
 				for (int xDst = 0; xDst < 8; xDst++) {
@@ -34,7 +34,7 @@ std::vector<int> selectBestMove(ThreadPool* threadPool, std::vector<std::vector<
 								//find best enemy move
 								std::vector<std::vector<Figure*>> newMap = *map;
 								simulateMove(&newMap, xPos, yPos, xDst, yDst);
-								std::vector<int> moveRes = selectBestMove(threadPool, &newMap, !player, depth + 1, moveScore < bestScore ? maxDepth - 1 : maxDepth, useFilter);
+								std::vector<int> moveRes = selectBestMove(threadPool, &newMap, !player, depth + 1, moveScore < bestScore ? maxDepth - 1 : maxDepth, false);
 								unSimulateMove(map, xPos, yPos, xDst, yDst);
 
 								//continue if enemy can beat king
@@ -245,6 +245,9 @@ int evaluateCurrentMove(std::vector<std::vector<Figure*>>* map, size_t xPos, siz
 	int score = 0;
 
 	if (destFigure) {
+		if (destFigure->type == King) {
+			return beatScore[destFigure->type];
+		}
 		score = beatScore[destFigure->type];
 	}
 
@@ -293,6 +296,11 @@ void simulateMove(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t yP
 		}
 	}
 
+	//Pawn swap
+	if ((*map)[xPos][yPos]->type == Pawn && (yPos == 0 || yPos == 7)) {
+		(*map)[xPos][yPos]->type == Queen;
+	}
+
 	(*map)[xDest][yDest] = (*map)[xPos][yPos];
 	(*map)[xPos][yPos] = nullptr;
 	(*map)[xDest][yDest]->totalMoves++;
@@ -308,6 +316,11 @@ void unSimulateMove(std::vector<std::vector<Figure*>>* map, size_t xPos, size_t 
 		else if (xDest == xPos - 2) {
 			(*map)[xPos - 4][yPos]->totalMoves--;
 		}
+	}
+
+	//Pawn swap
+	if ((*map)[xPos][yPos]->type == Pawn && (yPos == 1 || yPos == 6) && (*map)[xPos][yPos]->totalMoves > 0) {
+		(*map)[xPos][yPos]->type == Queen;
 	}
 
 	(*map)[xPos][yPos]->totalMoves--;

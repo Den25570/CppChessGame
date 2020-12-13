@@ -330,6 +330,7 @@ void AIMove(HWND hWnd) {
     if (game.isMate) {
         ShowMenuElements(hWnd);
         game.FinishGame();
+        InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
         return;
     }
 
@@ -439,7 +440,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 
             case IDC_SURRENDERBUTTON:
                 ShowMenuElements(hWnd);
-                game.FinishGame();               
+                game.FinishGame();
+                InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
                 break;
             case IDC_PVPBUTTON:
                 ShowGameElements(hWnd);
@@ -594,6 +596,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 if (game.isMate) {
                     ShowMenuElements(hWnd);
                     game.FinishGame();
+                    InvalidateRect(hWnd, &windowPainter.windowRect, FALSE);
                     break;
                 }
                 LogMove(moveType, game.logger.log[game.logger.log.size() - 1], (game.logger.log.size() - 1) / 2, (game.logger.log.size() - 1) % 2);

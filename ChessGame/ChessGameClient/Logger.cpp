@@ -23,6 +23,7 @@ void Logger::AddMove(MoveType moveType, std::vector<std::vector<Figure*>>* map, 
 {
 	std::wstring sMove = L""; 
 	std::vector<int> iMove = move;
+	iMove.push_back(moveType);
 
 	if (moveType == MoveType::Default) {
 		sMove += wchar_t(move[0] + L'a');
@@ -33,7 +34,7 @@ void Logger::AddMove(MoveType moveType, std::vector<std::vector<Figure*>>* map, 
 
 		sMove += this->GetUnicodeFigureRepresentation((*map)[move[2]][move[3]]->type, (*map)[move[2]][move[3]]->side);
 
-		if (move.size() == 5) {
+		if (move[4] != -1) {
 			sMove += L'x';
 			sMove += this->GetUnicodeFigureRepresentation((FigureType)move[4], !(*map)[move[2]][move[3]]->side);
 		}
